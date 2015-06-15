@@ -10,20 +10,24 @@ import logdefer.common;
   using a background worker thread that calls the underlying write
   mechanism.
    */
-struct ConcurrentWriterWorker(SerializedWriter)
+struct ConcurrentWriterWorker(Writer)
 {
     public:
+
+        // Delegate used to construct the underlying writer within the spawned thread
+        alias WriterInit = immutable(Writer delegate ());
 
         @disable this();
 
         // Create and spawn the worker thread
-        this(SerializedWriter writer)
+        this(WriterInit writerInit, uint maxMailBoxSize = 1024)
         {
-            worker_ = spawn(&writerThread, writer);
+            worker_ = spawn(&writerThread, writerInit);
+            setMaxMailboxSize(worker_, maxMailBoxSize, OnCrowding.block);
         }
 
         // Thread stopped when destroyed
-        ~this()
+        ~this() 
         {
             worker_.send(ShutdownMsg());
         }
@@ -43,8 +47,10 @@ struct ConcurrentWriterWorker(SerializedWriter)
         }
 
         // The actual worker thread function
-        static void writerThread(SerializedWriter writer)
+        static void writerThread(WriterInit writerInit)
         {
+            auto writer = writerInit();
+
             bool running = true;
 
             while (running)
@@ -116,10 +122,11 @@ unittest
     immutable int THREADS = 100;
 
     // Send logged messages back to our owner
-    auto worker = ConcurrentWriterWorker!Function((immutable string msg)
-    {
-        ownerTid.send(msg);
-    });
+    auto immutable writerInit = delegate () {
+        return (immutable string msg) { ownerTid.send(msg); };
+    };
+
+    auto worker = ConcurrentWriterWorker!Function(writerInit);
 
     // "APP" threads
     auto fn = (Tid worker, int id)
@@ -141,3 +148,4 @@ unittest
         receiveOnly!string();
     }
 }
+

@@ -15,9 +15,6 @@ alias Delegate = void delegate(immutable string msg);
 // Define the basic log levels
 enum LogLevel { Error = 10, Warn = 20, Info = 30, Trace = 40 };
 
-// By default use the JSON serializer
-alias DefaultSerializer = JsonSerializer;
-
 // Represents a log entry
 struct LogEntry
 {
@@ -46,3 +43,9 @@ struct EventContext
         );
     }
 }
+
+// By default use the JSON serializer
+alias DefaultSerializer = JsonSerializer;
+
+static const DefaultTimeProvider = () { return Clock.currTime; };
+static const DefaultDateTimeProvider = () { return cast(DateTime)Clock.currTime; };

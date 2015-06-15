@@ -6,22 +6,25 @@ import logdefer.writer.concurrent;
 
 alias WriterWorker = ConcurrentWriterWorker!Function;
 alias Writer = ConcurrentWriterClient;
-alias Logger = LogDefer!Writer;
+alias MyLogger = Logger!Writer;
 
 void main()
 {
-    // Spawn the background worker
-    auto worker = WriterWorker((immutable string msg)
+    // Delegate to create worker writer
+    auto immutable workerInit = delegate ()
     {
-        writeln(msg);
-    });
+        return (immutable string msg) { writeln(msg); };
+    };
+
+    // Spawn the background worker
+    auto worker = WriterWorker(workerInit);
 
     // "APP" thread
     auto thread = function(int id, Tid worker)
     {
-        Logger getLogger()
+        MyLogger getLogger()
         {
-            return Logger(Writer(worker));
+            return MyLogger(Writer(worker));
         }
 
         auto logger = getLogger();

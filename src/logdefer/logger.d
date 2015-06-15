@@ -3,11 +3,12 @@ module logdefer.logger;
 public import logdefer.common;
 
 import std.conv;
+import std.traits;
 
 import logdefer.serializer.json;
 
 /**
-  The primary interface into the logging system.  LogDefer is templatized
+  The primary interface into the logging system.  Logger is templatized
   based on:
 
   Writer - what to do with serialized data
@@ -25,7 +26,7 @@ import logdefer.serializer.json;
   internal buffer.  Once the object goes out of scope the logs are serialized
   and written to the provided writer.
   */
-struct LogDefer(Writer, Serializer = DefaultSerializer, TimeProvider = Clock)
+struct Logger(Writer, Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeProvider))
 {
     public:
         
@@ -33,32 +34,29 @@ struct LogDefer(Writer, Serializer = DefaultSerializer, TimeProvider = Clock)
 
         @disable this(this);
 
-        this(
-            Writer writer
-        )
+        this()(Writer writer, TimeProvider timeProvider = DefaultTimeProvider)
+        if (is(TimeProvider == typeof(DefaultTimeProvider)))
         {
             writer_ = writer;
-            eventContext_.startTime = TimeProvider.currTime;
+            eventContext_.startTime = timeProvider();
             sw_.start();
         }
 
-        this(
-            Writer writer, Serializer serializer
-        )
+        this()(Writer writer, Serializer serializer, TimeProvider timeProvider = DefaultTimeProvider)
+        if (is(TimeProvider == typeof(DefaultTimeProvider)))
+        {
+            writer_ = writer;
+            serializer_ = serializer;
+            eventContext_.startTime = timeProvider();
+            sw_.start();
+        }
+
+        this()( Writer writer, Serializer serializer, TimeProvider timeProvider)
+        if (!is(TimeProvider == typeof(DefaultTimeProvider)))
         {
             writer_ = writer;
             serializer_ = serializer;
             eventContext_.startTime = TimeProvider.currTime;
-            sw_.start();
-        }
-
-        this(
-            Writer writer, Serializer serializer, TimeProvider timeProvider
-        )
-        {
-            writer_ = writer;
-            serializer_ = serializer;
-            eventContext_.startTime = timeProvider.currTime;
             sw_.start();
         }
 
@@ -162,6 +160,7 @@ struct LogDefer(Writer, Serializer = DefaultSerializer, TimeProvider = Clock)
 
         Writer writer_ = void;
         Serializer serializer_;
+        TimeProvider timeProvider_;
         StopWatch sw_;
         EventContext eventContext_;
         int logLevel_ = int.min;

@@ -1,19 +1,13 @@
 import std.stdio;
 
 import logdefer.logger;
+import logdefer.writer.file;
 
-alias Logger = LogDefer!Delegate;
+alias MyLogger = Logger!FileWriter;
 
-Logger getLogger()
+MyLogger getLogger()
 {
-    auto file = new File("output.log", "w");
-
-    auto logger = Logger((immutable string data)
-    {
-        file.writeln(data);
-    });
-
-    return logger;
+    return MyLogger(FileWriter("output.log"));
 }
 
 void main()
