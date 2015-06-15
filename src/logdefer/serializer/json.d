@@ -18,10 +18,9 @@ struct JsonSerializer
     public:
         immutable(string) opCall (const ref EventContext eventContext)
         {
-            return JSONValue([
+            auto json = JSONValue([
                 "start": JSONValue(format(eventContext.startTime)),
                 "end": JSONValue(format(eventContext.endDuration)),
-                "data": JSONValue(eventContext.metadata),
                 "logs": JSONValue(
                     eventContext.logs.data.map!(
                         log => JSONValue([
@@ -31,7 +30,14 @@ struct JsonSerializer
                         ])
                     ).array
                  ),
-            ]).toString();
+            ]);
+
+            if (eventContext.metadata)
+            {
+                json.object()["data"] = JSONValue(eventContext.metadata);
+            }
+
+            return json.toString();
         }
 
     private:
