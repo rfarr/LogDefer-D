@@ -8,18 +8,17 @@ import std.traits;
 
 import logdefer.common;
 
+enum LogPeriod { NONE, HOURLY, DAILY };
 
 struct FileRoller(Writer = FileWriter, DateTimeProvider = typeof(DefaultDateTimeProvider))
 {
     public:
 
-        enum LogPeriod { NONE, HOURLY, DAILY };
 
         this()(Writer writer, const LogPeriod logPeriod = LogPeriod.HOURLY, DateTimeProvider dateTimeProvider = DefaultDateTimeProvider)
         if (is(DateTimeProvider == typeof(DefaultDateTimeProvider)))
         {
             writer_ = writer;
-
             logPeriod_ = logPeriod;
             dateTimeProvider_ = dateTimeProvider;
             lastRolledAt_ = dateTimeProvider_();
@@ -30,7 +29,6 @@ struct FileRoller(Writer = FileWriter, DateTimeProvider = typeof(DefaultDateTime
         if (!is(DateTimeProvider == typeof(DefaultDateTimeProvider)))
         {
             writer_ = writer;
-
             logPeriod_ = logPeriod;
             dateTimeProvider_ = dateTimeProvider;
             lastRolledAt_ = dateTimeProvider_();
@@ -75,7 +73,6 @@ struct FileRoller(Writer = FileWriter, DateTimeProvider = typeof(DefaultDateTime
             switch (logPeriod_)
             {
                 case LogPeriod.HOURLY:
-
                     return
                            now.hour != lastRolledAt_.hour
                         || now.dayOfYear != lastRolledAt_.dayOfYear
@@ -89,7 +86,7 @@ struct FileRoller(Writer = FileWriter, DateTimeProvider = typeof(DefaultDateTime
             }
         }
 
-        string getRolledFilename(const string filename)
+        string getRolledFilename(const string filename) const
         {
             switch (logPeriod_)
             {
@@ -168,7 +165,7 @@ version (unittest)
 unittest
 {
     auto now = dateTime;
-    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), TestFileRoller.LogPeriod.NONE, () { return now; });
+    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), LogPeriod.NONE, () { return now; });
 
     roller("Test 1");
     assert(roller.writer_.wrote.data.length == 1);
@@ -195,7 +192,7 @@ unittest
 unittest
 {
     auto now = dateTime;
-    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), TestFileRoller.LogPeriod.HOURLY, () { return now; });
+    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), LogPeriod.HOURLY, () { return now; });
 
     roller("Test 1");
     assert(roller.writer_.wrote.data.length == 1);
@@ -247,7 +244,7 @@ unittest
 unittest
 {
     auto now = dateTime;
-    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), TestFileRoller.LogPeriod.DAILY, () { return now; });
+    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), LogPeriod.DAILY, () { return now; });
 
     roller("Test 1");
     assert(roller.writer_.wrote.data.length == 1);
@@ -301,7 +298,7 @@ unittest
 unittest
 {
     auto now = dateTime;
-    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), TestFileRoller.LogPeriod.DAILY, () { return now; });
+    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), LogPeriod.DAILY, () { return now; });
 
     now.month(Month.jul);
     now.day(1);
@@ -332,7 +329,7 @@ unittest
 unittest
 {
     auto now = dateTime;
-    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), TestFileRoller.LogPeriod.DAILY, () { return now; });
+    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), LogPeriod.DAILY, () { return now; });
 
     now.month(Month.jul);
     now.day(1);
@@ -347,7 +344,7 @@ unittest
 unittest
 {
     auto now = dateTime;
-    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), TestFileRoller.LogPeriod.DAILY, () { return now; });
+    auto roller = TestFileRoller(MockFileWriter("/tmp/foo.log"), LogPeriod.DAILY, () { return now; });
 
     // simulate write failing
     roller.writer_.writeFailed = true;
@@ -371,6 +368,7 @@ struct FileWriter
         void opCall(immutable string msg)
         {
             logfile_.writeln(msg);
+            logfile_.flush();
         }
 
         void reopen()
@@ -385,7 +383,7 @@ struct FileWriter
 
         bool move(string newFilename)
         {
-            return link(filename_, newFilename) && unlink(filename_);
+            return movefile(filename_, newFilename);
         }
 
 
@@ -409,14 +407,11 @@ version(Posix)
         alias unistd = core.sys.posix.unistd;
 
         // move file without overwriting existing without race condition
-        bool link(const string originalFilename, const string newFilename)
+        bool movefile(const string originalFilename, const string newFilename)
         {
-            return unistd.link(originalFilename.ptr, newFilename.ptr) == 0;
-        }
-
-        bool unlink(const string filename)
-        {
-            return unistd.unlink(filename.ptr) == 0;
+            return 
+                unistd.link(originalFilename.ptr, newFilename.ptr) == 0 &&
+                unistd.unlink(filename.ptr) == 0;
         }
 }
 else
@@ -426,7 +421,7 @@ else
         import std.file;
 
         // move file without overwriting, contains race condition
-        bool link(const string originalFilename, const string newFilename)
+        bool movefile(const string originalFilename, const string newFilename)
         {
             scope(failure) return false;
 
@@ -436,14 +431,6 @@ else
             }
 
             rename(originalFilename, newFilename);
-        }
-
-        bool unlink(const string filename)
-        {
-            scope(success) return true;
-            scope(failure) return false;
-
-            remove(filename);
         }
 }
 

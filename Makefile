@@ -27,18 +27,21 @@ test:
 
 examples: \
 	simple \
-	file \
-	multithreaded
+	basicfile \
+	concurrent \
+	fileroller
 
 simple: lib
 	$(DMD) -of$(BUILD)simple $(INCLUDES) $(RELEASE_DFLAGS) examples/simple.d $(LIB)
 
-file: lib
-	$(DMD) -of$(BUILD)file $(INCLUDES) $(RELEASE_DFLAGS) examples/file.d $(LIB)
+basicfile: lib
+	$(DMD) -of$(BUILD)basicfile $(INCLUDES) $(RELEASE_DFLAGS) examples/basicfile.d $(LIB)
 
-multithreaded: lib
-	$(DMD) -of$(BUILD)multithreaded $(INCLUDES) $(RELEASE_DFLAGS) examples/multithreaded.d $(LIB)
+concurrent: lib
+	$(DMD) -of$(BUILD)concurrent $(INCLUDES) $(RELEASE_DFLAGS) examples/concurrent.d $(LIB)
 
+fileroller: lib
+	$(DMD) -of$(BUILD)fileroller $(INCLUDES) $(RELEASE_DFLAGS) examples/fileroller.d $(LIB)
 
 clean:
 	rm -r $(BUILD)

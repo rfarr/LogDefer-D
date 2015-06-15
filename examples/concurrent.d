@@ -16,10 +16,16 @@ void main()
         return (immutable string msg) { writeln(msg); };
     };
 
-    // Spawn the background worker
-    auto worker = WriterWorker(workerInit);
+    // Empty error handler
+    auto immutable onError = delegate (immutable string errorMsg)
+    {
+    };
 
-    // "APP" thread
+    // Spawn the background worker
+    auto worker = WriterWorker(workerInit, onError);
+
+    // "APP" thread, need to pass the Tid of the worker to it
+    // alternatively could use register() and locate() for this
     auto thread = function(int id, Tid worker)
     {
         MyLogger getLogger()

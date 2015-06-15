@@ -20,9 +20,13 @@ struct ConcurrentWriterWorker(Writer)
         @disable this();
 
         // Create and spawn the worker thread
-        this(WriterInit writerInit, uint maxMailBoxSize = 1024)
+        this(
+            WriterInit writerInit,
+            OnError onError,
+            uint maxMailBoxSize = 1024
+        )
         {
-            worker_ = spawn(&writerThread, writerInit);
+            worker_ = spawn(&writerThread, writerInit, onError);
             setMaxMailboxSize(worker_, maxMailBoxSize, OnCrowding.block);
         }
 
@@ -47,7 +51,7 @@ struct ConcurrentWriterWorker(Writer)
         }
 
         // The actual worker thread function
-        static void writerThread(WriterInit writerInit)
+        static void writerThread(WriterInit writerInit, OnError onError)
         {
             auto writer = writerInit();
 
@@ -66,9 +70,11 @@ struct ConcurrentWriterWorker(Writer)
                             }
                             catch (Exception e)
                             {
-                                stderr.writeln(
-                                    "[WARN] unable to write msg (", msg, ") "
-                                    "due to exception (", e.msg, ")"
+                                onError(
+                                    "Exception (%s) while writing msg (%s)".format(
+                                        e.msg,
+                                        msg
+                                    )
                                 );
                             }
                         },
@@ -83,9 +89,7 @@ struct ConcurrentWriterWorker(Writer)
                 }
                 catch (Exception e)
                 {
-                    stderr.writeln(
-                        "[WARN] unable to receive due to exception (", e.msg, ")"
-                    );
+                    onError("Exception (%s) while receiving msg".format(e.msg));
                 }
             }
         }
@@ -126,7 +130,10 @@ unittest
         return (immutable string msg) { ownerTid.send(msg); };
     };
 
-    auto worker = ConcurrentWriterWorker!Function(writerInit);
+    auto immutable error = delegate(immutable string msg)
+    {
+    };
+    auto worker = ConcurrentWriterWorker!Function(writerInit, error);
 
     // "APP" threads
     auto fn = (Tid worker, int id)

@@ -4,7 +4,10 @@ public import std.array;
 public import std.datetime;
 public import std.string;
 
+import std.stdio;
+
 import logdefer.serializer.json;
+
 
 alias Verbosity = immutable int;
 alias Metadata = string[string];
@@ -47,5 +50,11 @@ struct EventContext
 // By default use the JSON serializer
 alias DefaultSerializer = JsonSerializer;
 
-static const DefaultTimeProvider = () { return Clock.currTime; };
-static const DefaultDateTimeProvider = () { return cast(DateTime)Clock.currTime; };
+static const DefaultTimeProvider = () {
+    return Clock.currTime;
+};
+static const DefaultDateTimeProvider = () {
+    return cast(DateTime)Clock.currTime;
+};
+
+alias OnError = immutable(void delegate (immutable string msg));
