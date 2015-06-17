@@ -23,13 +23,13 @@ void main()
         return FileRoller!()(FileWriter(logfile));
     };
 
-    auto immutable onError = delegate (immutable string errorMsg)
+    auto immutable onError = delegate (string errorMsg)
     {
         stderr.writeln("[ERROR] ", errorMsg);
     };
 
     // Spawn the background worker
-    auto worker = WriterWorker(workerInit, onError);
+    auto worker = WriterWorker(workerInit, onError, 2048);
 
     // "APP" thread, need to pass the Tid of the worker to it
     // alternatively could use register() and locate() for this
@@ -40,12 +40,14 @@ void main()
             return MyLogger(Writer(worker));
         }
 
+        import std.random;
+
         int count = 0;
-        while(count++ < 480)
+        while(count++ < 10000)
         {
             auto logger = getLogger();
             logger.info("Thread ", id);
-            Thread.sleep(dur!"seconds"(10));
+            Thread.sleep(dur!"seconds"(uniform(0, 30)));
         }
 
         ownerTid.send(id);

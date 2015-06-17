@@ -31,6 +31,7 @@ struct ConcurrentWriterWorker(Writer)
         }
 
         // Thread stopped when destroyed
+        // will flush remain logs and then quit
         ~this() 
         {
             worker_.send(ShutdownMsg());
@@ -106,7 +107,7 @@ struct ConcurrentWriterClient
             worker_ = workerHandle;
         }
 
-        void opCall(immutable string data)
+        void opCall(string data)
         {
             worker_.send(data);
         }
@@ -127,10 +128,10 @@ unittest
 
     // Send logged messages back to our owner
     auto immutable writerInit = delegate () {
-        return (immutable string msg) { ownerTid.send(msg); };
+        return (string msg) { ownerTid.send(msg); };
     };
 
-    auto immutable error = delegate(immutable string msg)
+    auto immutable error = delegate(string msg)
     {
     };
     auto worker = ConcurrentWriterWorker!Function(writerInit, error);

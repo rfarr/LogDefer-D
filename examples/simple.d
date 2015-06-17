@@ -9,7 +9,7 @@ alias MyLogger = Logger!Function;
 */
 void main()
 {
-    auto logger = MyLogger((immutable string data)
+    auto logger = MyLogger((string data)
     {
         writeln(data);
     });

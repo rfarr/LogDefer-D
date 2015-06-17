@@ -12,8 +12,8 @@ import logdefer.serializer.json;
 alias Verbosity = immutable int;
 alias Metadata = string[string];
 
-alias Function = void function(immutable string msg);
-alias Delegate = void delegate(immutable string msg);
+alias Function = void function(string msg);
+alias Delegate = void delegate(string msg);
 
 // Define the basic log levels
 enum LogLevel { Error = 10, Warn = 20, Info = 30, Trace = 40 };
@@ -57,4 +57,4 @@ static const DefaultDateTimeProvider = () {
     return cast(DateTime)Clock.currTime;
 };
 
-alias OnError = immutable(void delegate (immutable string msg));
+alias OnError = immutable(void delegate (string msg));

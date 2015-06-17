@@ -34,7 +34,7 @@ struct FileRoller(Writer = FileWriter, DateTimeProvider = typeof(DefaultDateTime
             lastRolledAt_ = dateTimeProvider_();
         }
 
-        void opCall(immutable string msg)
+        void opCall(string msg)
         {
             rollLog();
             writer_(msg);
@@ -74,7 +74,7 @@ struct FileRoller(Writer = FileWriter, DateTimeProvider = typeof(DefaultDateTime
             {
                 case LogPeriod.HOURLY:
                     return
-                           now.hour != lastRolledAt_.hour
+                          now.hour != lastRolledAt_.hour
                         || now.dayOfYear != lastRolledAt_.dayOfYear
                         || now.year != lastRolledAt_.year;
                 case LogPeriod.DAILY:
@@ -141,7 +141,7 @@ version (unittest)
             return moved;
         }
 
-        void opCall (immutable string msg)
+        void opCall (string msg)
         {
             if (writeFailed)
             {
@@ -365,7 +365,7 @@ struct FileWriter
             reopen();
         }
 
-        void opCall(immutable string msg)
+        void opCall(string msg)
         {
             logfile_.writeln(msg);
             logfile_.flush();
@@ -409,9 +409,9 @@ version(Posix)
         // move file without overwriting existing without race condition
         bool movefile(const string originalFilename, const string newFilename)
         {
-            return 
-                unistd.link(originalFilename.ptr, newFilename.ptr) == 0 &&
-                unistd.unlink(filename.ptr) == 0;
+            return
+                unistd.link(originalFilename.toStringz, newFilename.toStringz) == 0 &&
+                (unistd.unlink(originalFilename.toStringz) == 0 || errno == ENOENT);
         }
 }
 else

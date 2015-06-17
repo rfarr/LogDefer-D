@@ -13,11 +13,11 @@ void main()
     // Delegate to create worker writer
     auto immutable workerInit = delegate ()
     {
-        return (immutable string msg) { writeln(msg); };
+        return (string msg) { writeln(msg); };
     };
 
     // Empty error handler
-    auto immutable onError = delegate (immutable string errorMsg)
+    auto immutable onError = delegate (string errorMsg)
     {
     };
 
