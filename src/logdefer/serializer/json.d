@@ -16,7 +16,7 @@ import std.json;
 struct JsonSerializer
 {
     public:
-        immutable(string) opCall (const ref EventContext eventContext)
+        string opCall (const ref EventContext eventContext)
         {
             auto json = JSONValue([
                 "start": JSONValue(format(eventContext.startTime)),
