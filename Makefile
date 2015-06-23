@@ -36,4 +36,4 @@ perf: lib
 	$(DMD) -of$(BUILD)perf $(INCLUDES) $(RELEASE_DFLAGS) examples/perf.d $(LIB)
 
 clean:
-	rm -r $(BUILD)
+	rm -rf $(BUILD)

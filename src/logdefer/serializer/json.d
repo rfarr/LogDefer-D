@@ -17,7 +17,7 @@ import std.utf;
   Since output is fixed use an optimized algorithm.
   This is about 2x faster than using std.json
   */
-struct JSONSerializer(Writer = FunctionWriter)
+struct JSONSerializer(Writer = DelegateWriter)
 {
     public:
 

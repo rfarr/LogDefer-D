@@ -5,25 +5,42 @@ public import logdefer.common;
 import std.conv;
 import std.traits;
 
+alias DefaultLogger = Logger!();
+
 /**
-  The primary interface into the logging system.  LogDefer is templatized
+  The primary interface into the logging system.  Logger is templatized
   based on:
 
   Serializer - formats the output and passes it to writer
   TimeProvider - what source of time to use
 
   By default the Serializer is JSON and the TimeProvider uses the standard Clock
-  in std.datetime.
-  
-  You have to provide the Serializer which can be a function, delegate or object.
-  The only requirement is that your serializer implement the opCall
-  function which will receive the serialized string of data as it's only parameter.
+  in std.datetime.  In this case simply pass a delegate callback that takes the
+  serialized string data and does whatever you want with it.  The constructor
+  will take care of initializing the JSON serializer with your provided callback.
 
+  If you want to use a different serializer simple pass it in instead to the
+  properly templatized struct:
+
+  auto mySerializer = MySerializer();
+  auto logger = Logger!(MySerializer)(mySerializer);
+
+  The only constraint is that your serializer implements opCall which takes
+  a ref to the EventContext object.   Thus it could be a function, delegate,
+  struct or class.
+
+  If you want to provide your own source of time (for testing, or some external
+  time provider) you just call the constructor with your TimeProvider which
+  again must implement opCall and returns a SysTime:
+
+  auto myTimeProvider = () { return SysTime(0); };
+  auto logger = Logger!(MySerializer, typeof(myTimeProvider))(xxx, myTimeProvider);
+  
   As you log against the log defer instance it will accumulate the logs into its
-  internal buffer.  Once the object goes out of scope the logs are serialized
-  and written to the provided serializer.
+  internal buffer.  Once the object goes out of scope the logs are passed to the
+  serializer which handles formatting and writing out the logs.
   */
-struct LogDefer(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeProvider))
+struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeProvider))
 {
     public:
         

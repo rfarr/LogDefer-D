@@ -51,5 +51,3 @@ alias DefaultSerializer = JSONSerializer!(DelegateWriter);
 static const DefaultTimeProvider = () {
     return Clock.currTime;
 };
-
-alias OnError = immutable(void delegate (string msg));
