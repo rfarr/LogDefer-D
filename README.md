@@ -27,10 +27,10 @@ void someEventHandler(Foo foo, Bar bar)
     auto logger = DefaultLogger((string msg)
     {
         writeln(msg);
-    };
+    });
 
     logger.info("Processing event: ", foo);
-    scope(failure) { logger.error("Error processing ", bar);
+    scope(failure) { logger.error("Error processing ", bar); };
 
     ... // do stuff
 } // <-- logger goes out of scope and log is written
