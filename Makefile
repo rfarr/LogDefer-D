@@ -1,5 +1,5 @@
 DMD=/usr/bin/env dmd
-RELEASE_DFLAGS=-O -w -g
+RELEASE_DFLAGS=-O -w -g -inline -release
 LIB_DFLAGS=-lib
 TEST_DFLAGS=-main -unittest -w -g
 INCLUDES=-Isrc/
@@ -26,10 +26,14 @@ test:
 	$(TEST)
 
 examples: \
-	simple \
+	basic \
+	perf
 
-simple: lib
-	$(DMD) -of$(BUILD)simple $(INCLUDES) $(RELEASE_DFLAGS) examples/simple.d $(LIB)
+basic: lib
+	$(DMD) -of$(BUILD)basic $(INCLUDES) $(RELEASE_DFLAGS) examples/basic.d $(LIB)
+
+perf: lib
+	$(DMD) -of$(BUILD)perf $(INCLUDES) $(RELEASE_DFLAGS) examples/perf.d $(LIB)
 
 clean:
 	rm -r $(BUILD)

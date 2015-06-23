@@ -5,28 +5,25 @@ public import logdefer.common;
 import std.conv;
 import std.traits;
 
-import logdefer.serializer.json;
-
 /**
-  The primary interface into the logging system.  Logger is templatized
+  The primary interface into the logging system.  LogDefer is templatized
   based on:
 
-  Writer - what to do with serialized data
-  Serializer - what format to serialize the data to
+  Serializer - formats the output and passes it to writer
   TimeProvider - what source of time to use
 
   By default the Serializer is JSON and the TimeProvider uses the standard Clock
   in std.datetime.
   
-  You have to provide the Writer which can be a function, delegate or object.
-  The only requirement is that your writer implement the opCall
+  You have to provide the Serializer which can be a function, delegate or object.
+  The only requirement is that your serializer implement the opCall
   function which will receive the serialized string of data as it's only parameter.
 
   As you log against the log defer instance it will accumulate the logs into its
   internal buffer.  Once the object goes out of scope the logs are serialized
-  and written to the provided writer.
+  and written to the provided serializer.
   */
-struct Logger(Writer, Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeProvider))
+struct LogDefer(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeProvider))
 {
     public:
         
@@ -34,32 +31,38 @@ struct Logger(Writer, Serializer = DefaultSerializer, TimeProvider = typeof(Defa
 
         @disable this(this);
 
-        this()(Writer writer, TimeProvider timeProvider = DefaultTimeProvider)
-        if (is(TimeProvider == typeof(DefaultTimeProvider)))
+        /*
+           Convenience constructor.  Uses default serializer and time provider
+           with provided delegate to write log
+        */
+        this()(void delegate(string msg) callback)
         {
-            writer_ = writer;
-            eventContext_.startTime = timeProvider();
+            serializer_ = Serializer(callback);
+            eventContext_.startTime = DefaultTimeProvider();
             sw_.start();
         }
 
-        this()(Writer writer, Serializer serializer, TimeProvider timeProvider = DefaultTimeProvider)
-        if (is(TimeProvider == typeof(DefaultTimeProvider)))
+        /*
+            Uses default time provider and provided serializer
+        */
+        this()(Serializer serializer)
         {
-            writer_ = writer;
+            serializer_  = serializer;
+            eventContext_.startTime = DefaultTimeProvider();
+            sw_.start();
+        }
+
+        /*
+           Uses provided serializer and time provider
+        */
+        this()(Serializer serializer, TimeProvider timeProvider)
+        {
             serializer_ = serializer;
             eventContext_.startTime = timeProvider();
             sw_.start();
         }
 
-        this()( Writer writer, Serializer serializer, TimeProvider timeProvider)
-        if (!is(TimeProvider == typeof(DefaultTimeProvider)))
-        {
-            writer_ = writer;
-            serializer_ = serializer;
-            eventContext_.startTime = TimeProvider.currTime;
-            sw_.start();
-        }
-
+        // Commit log when going out of scope
         ~this()
         {
             commit();
@@ -116,14 +119,6 @@ struct Logger(Writer, Serializer = DefaultSerializer, TimeProvider = typeof(Defa
             add_log(LogLevel.Trace, params);
         }
 
-        // Commit the logs in the buffer
-        void commit()
-        {
-            eventContext_.endDuration = sw_.peek();
-            writer_(serializer_(eventContext_));
-            eventContext_.logs.clear();
-        }
-
         // Manipulate and view log levels...
         void logLevel(LogLevel logLevel)
         {
@@ -158,10 +153,16 @@ struct Logger(Writer, Serializer = DefaultSerializer, TimeProvider = typeof(Defa
 
     private:
 
-        Writer writer_ = void;
-        Serializer serializer_;
+        Serializer serializer_ = void;
         TimeProvider timeProvider_;
         StopWatch sw_;
         EventContext eventContext_;
         int logLevel_ = int.min;
+
+        // Commit the logs in the buffer
+        void commit()
+        {
+            eventContext_.endDuration = sw_.peek();
+            serializer_(eventContext_);
+        }
 }

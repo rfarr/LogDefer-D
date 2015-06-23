@@ -2,20 +2,21 @@ import std.stdio;
 
 import logdefer.logger;
 
-alias MyLogger = Logger!Function;
+alias Logger = LogDefer!();
 
 /* Simple example, creates a log defer instance that writes to
    stdout using the default serializer
 */
 void main()
 {
-    auto logger = MyLogger((string data)
+    auto logger = Logger((string data)
     {
         writeln(data);
     });
 
-    logger.trace("Starting main\nMultiline output\n");
-
+    logger.trace("Starting main...");
+    
+    logger.info("Multiline\noutput");
 
     try
     {
@@ -29,7 +30,7 @@ void main()
     }
 }
 
-int multiply(const int x, const int y, ref MyLogger logger)
+int multiply(const int x, const int y, ref Logger logger)
 {
     logger.info("Calculating product of ", x, " and ", y);
 

@@ -2,6 +2,7 @@ import std.datetime;
 import std.stdio;
 
 import logdefer.logger;
+import logdefer.serializer.json;
 
 alias Logger = LogDefer!();
 
@@ -15,7 +16,8 @@ void main()
 
     foreach(i; 0..RUNS)
     {
-        auto logger = Logger((string data) { });
+        auto logger = Logger((string data) {
+        });
 
         logger.data("key", "value");
         logger.data("key2", "value2");

@@ -8,12 +8,8 @@ import std.stdio;
 
 import logdefer.serializer.json;
 
-
 alias Verbosity = immutable int;
 alias Metadata = string[string];
-
-alias Function = void function(string msg);
-alias Delegate = void delegate(string msg);
 
 // Define the basic log levels
 enum LogLevel { Error = 10, Warn = 20, Info = 30, Trace = 40 };
@@ -48,13 +44,12 @@ struct EventContext
 }
 
 // By default use the JSON serializer
-alias DefaultSerializer = JsonSerializer;
+alias DelegateWriter = void delegate(string msg);
+alias DefaultSerializer = JSONSerializer!(DelegateWriter);
 
+// By default use system clock
 static const DefaultTimeProvider = () {
     return Clock.currTime;
-};
-static const DefaultDateTimeProvider = () {
-    return cast(DateTime)Clock.currTime;
 };
 
 alias OnError = immutable(void delegate (string msg));
