@@ -13,9 +13,9 @@ This module lets you defer log processing in two ways:
   * by storing logs in a structured format - you don't need to choose up front how you will render them or process them
   * structured logging allows log entries to be processed and queried much easier than a grep
 
-By itself, this module doesn't actually do any logging.  It provides to you a "writer hook" that you implement to actually write/persist/whatever your log messages.
+By itself, this module doesn't actually do any logging.  It provides to you a hook that you implement to actually write/persist/whatever your log messages.
 
-This logger is inspired by the Log::Defer CPAN module written by Doug Hoyte. For more information about deferred logging and visualization see https://github.com/hoytech/Log-Defer and https://github.com/hoytech/Log-Defer-Viz
+This logger is inspired by the Log::Defer CPAN module written by Doug Hoyte. For more information about deferred logging see https://github.com/hoytech/Log-Defer
 
 ### Basic Usage
 
@@ -38,7 +38,7 @@ void someEventHandler(Foo foo, Bar bar)
 
 In this example the provided callback will log messages to standard out.  Once constructed you simple use the logger instance as you would a typical logger.  Once the logger goes out of scope it will automatically "commit" the stream of collected log messages by serializing them to a structured format and then calling your provided writer callback.
 
-NOTE: Until the logger commits the messages *nothing* will actually be written.  If your program calls exit or seg faults you will not see any logs for that event!  In the future I hope to support an incremental logging feature that will allow you to write out log messages as they come in.
+__NOTE__: Until the logger commits the messages *nothing* will actually be written.  If your program calls exit or seg faults you will not see any logs for that event!  In the future I hope to support an incremental logging feature that will allow you to write out log messages as they come in.
 
 ### Log Serialization
 
@@ -73,13 +73,13 @@ The provided JSON serializer follows the following structure:
 
 ```json
 {
-    "start": 1434568358.123, // unix time of start of event
-    "end": 0.732, // total duration of event
+    "start": 1434568358.123,
+    "end": 0.732,
     "data": {
         "requestID": "123",
     }, // user provided metadata
     "logs": [
-        [ 0.13, 30, "log message 1" ], // time offset from start, log level, msg
+        [ 0.13, 30, "log message 1" ],
         [ 0.15, 20, "log message 2" ]
     ]
 }
@@ -104,3 +104,7 @@ auto logger = Logger!(typeof(serializer), typeof(timeProvider)(serializer, timeP
 logger.info(...);
 
 ```
+
+### Visualization
+
+Once written you can use separate tools to process and render the date in a useable format.  An excellent tool to use is `log-defer-viz` available at https://github.com/hoytech/Log-Defer-Viz
