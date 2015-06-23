@@ -38,7 +38,7 @@ void someEventHandler(Foo foo, Bar bar)
 
 In this example the provided callback will log messages to standard out.  Once constructed you simple use the logger instance as you would a typical logger.  Once the logger goes out of scope it will automatically "commit" the stream of collected log messages by serializing them to a structured format and then calling your provided writer callback.
 
-__NOTE__: Until the logger commits the messages *nothing* will actually be written.  If your program calls exit or seg faults you will not see any logs for that event!  In the future I hope to support an incremental logging feature that will allow you to write out log messages as they come in.
+**NOTE**: Until the logger commits the messages *nothing* will actually be written.  If your program calls exit or seg faults you will not see any logs for that event!  In the future I hope to support an incremental logging feature that will allow you to write out log messages as they come in.
 
 ### Log Serialization
 
@@ -76,8 +76,8 @@ The provided JSON serializer follows the following structure:
     "start": 1434568358.123,
     "end": 0.732,
     "data": {
-        "requestID": "123",
-    }, // user provided metadata
+        "requestID": "123"
+    },
     "logs": [
         [ 0.13, 30, "log message 1" ],
         [ 0.15, 20, "log message 2" ]
