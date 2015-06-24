@@ -1,6 +1,7 @@
 module logdefer.logger;
 
 public import logdefer.common;
+import logdefer.timer;
 
 import std.conv;
 import std.traits;
@@ -113,6 +114,12 @@ struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeP
         string opIndex(Key)(const auto ref Key key)
         {
             return eventContext_.metadata[to!string(key)];
+        }
+
+        Timer.Scoped timer(string timerName)
+        {
+            eventContext_.timers.put(Timer(timerName));
+            return eventContext_.timers.data[$-1].start_timer(sw_.peek());
         }
 
         // Convenience wrappers...

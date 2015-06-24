@@ -4,8 +4,6 @@ import std.stdio;
 import logdefer.logger;
 import logdefer.serializer.json;
 
-alias Logger = LogDefer!();
-
 //Test raw serialization time
 void main()
 {
@@ -16,7 +14,7 @@ void main()
 
     foreach(i; 0..RUNS)
     {
-        auto logger = Logger((string data) {
+        auto logger = DefaultLogger((string data) {
         });
 
         logger.data("key", "value");

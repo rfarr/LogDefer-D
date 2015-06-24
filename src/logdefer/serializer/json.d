@@ -32,10 +32,10 @@ struct JSONSerializer(Writer = DelegateWriter)
         {
             write("{");
 
-            serializeTimers(eventContext);
-
-            serializeMetadata(eventContext);
+            serializeEventTimers(eventContext);
             serializeLogs(eventContext);
+            serializeMetadata(eventContext);
+            serializeUserTimers(eventContext);
 
             write("}");
 
@@ -52,17 +52,17 @@ struct JSONSerializer(Writer = DelegateWriter)
         char[BUFFER_SIZE] buffer_;
         uint length_;
 
-        void serializeTimers(const ref EventContext eventContext)
+        void serializeEventTimers(const ref EventContext eventContext)
         {
             writeAll([
                 `"start":`,
                 to!string(eventContext.startTime.toUnixTime),
                 ".",
-                to!string(eventContext.startTime.fracSec.usecs),
+                format("%06d", eventContext.startTime.fracSec.usecs),
                 `,"end":`,
                 to!string(eventContext.endDuration.seconds),
                 ".",
-                to!string(eventContext.endDuration.usecs),
+                format("%06d", eventContext.endDuration.usecs),
             ]);
         }
 
@@ -98,7 +98,7 @@ struct JSONSerializer(Writer = DelegateWriter)
                         "[",
                         to!string(entry.eventDuration.seconds),
                         ".",
-                        to!string(entry.eventDuration.usecs),
+                        format("%06d", entry.eventDuration.usecs),
                         ",",
                         to!string(entry.verbosity),
                         `,"`,
@@ -107,6 +107,32 @@ struct JSONSerializer(Writer = DelegateWriter)
                     ]);
                 }
                 buffer_[length_ - 1] = ']'; 
+            }
+        }
+
+        void serializeUserTimers(const ref EventContext eventContext)
+        {
+            if (eventContext.timers.data)
+            {
+                write(`,"timers":[`);
+
+                foreach(ref timer; eventContext.timers.data)
+                {
+                    writeAll([
+                        `["`,
+                        timer.name,
+                        `",`,
+                        to!string(timer.start.seconds),
+                        `.`,
+                        format("%06d", timer.start.usecs),
+                        `,`,
+                        to!string(timer.end.seconds),
+                        `.`,
+                        format("%06d", timer.end.usecs),
+                        `],`
+                    ]);
+                }
+                buffer_[length_ - 1] = ']';
             }
         }
 

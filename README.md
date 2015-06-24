@@ -36,13 +36,13 @@ void someEventHandler(Foo foo, Bar bar)
 } // <-- logger goes out of scope and log is written
 ```
 
-In this example the provided callback will log messages to standard out.  Once constructed you simple use the logger instance as you would a typical logger.  Once the logger goes out of scope it will automatically "commit" the stream of collected log messages by serializing them to a structured format and then calling your provided writer callback.
+In this example the provided callback will log messages to standard out.  Once constructed you simply use the logger instance as you would a typical logger.  Once the logger goes out of scope it will automatically "commit" the stream of collected log messages by serializing them to a structured format and then calling your provided writer callback.
 
 **NOTE**: Until the logger commits the messages *nothing* will actually be written.  If your program calls exit or seg faults you will not see any logs for that event!  In the future I hope to support an incremental logging feature that will allow you to write out log messages as they come in.
 
 ### Log Serialization
 
-Currently the only built in serialization format is JSON, but you can easily provide your own serializer.  Simply implement a callable (function/delegate/opCall) that takes a logdefer EventContext struct:
+Currently the only built in serialization format is JSON, but you can easily provide your own serializer.  Simply implement a callable (function/delegate/opCall) that takes a LogDefer EventContext struct:
 
 ```d
 import logdefer.logger;
@@ -88,7 +88,7 @@ The provided JSON serializer follows the following structure:
 
 ### Data
 
-The data section is useful for storing data that is associated with the 'context' of the event.  For example storing a user's IP or session cookie.  Also things like global request ids, operation status (ie whether the requested operation suceeded or failed), event data, etc.  Basically anything you can think of that you would like to be able to query by later.  The only contraint on the key/value is that they are serializable to string via to!string.
+The data section is useful for storing data that is associated with the 'context' of the event.  For example storing a user's IP or session cookie.  Also things like global request ids, operation status (ie whether the requested operation suceeded or failed), event data, etc.  Basically anything you can think of that you would like to be able to query by later.  The only constraint on the key/value is that they are serializable to string via to!string.
 
 
 ### TimeProvider
@@ -99,7 +99,7 @@ By default LogDefer will use Clock.currTime to determine the start timestamp for
 auto timeProvider = () { return SysTime(12345); };
 auto serializer = JSONSerializer!()((string msg) {});
 
-auto logger = Logger!(typeof(serializer), typeof(timeProvider)(serializer, timeProvider);
+auto logger = Logger!(typeof(serializer), typeof(timeProvider))(serializer, timeProvider);
 
 logger.info(...);
 

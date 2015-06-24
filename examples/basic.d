@@ -31,6 +31,6 @@ void main()
 int multiply(const int x, const int y, ref DefaultLogger logger)
 {
     logger.info("Calculating product of ", x, " and ", y);
-
+    auto timer = logger.timer("multiply");
     return x*y;
 }

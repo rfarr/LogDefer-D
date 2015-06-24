@@ -7,6 +7,7 @@ public import std.string;
 import std.stdio;
 
 import logdefer.serializer.json;
+import logdefer.timer;
 
 alias Verbosity = immutable int;
 alias Metadata = string[string];
@@ -34,6 +35,7 @@ struct EventContext
     TickDuration endDuration; // Duration of the event
     Metadata metadata; // Associated metadata with the event
     Appender!(LogEntry[]) logs; // log entries
+    Appender!(Timer[]) timers; // user timers
 
     string toString() const
     {
