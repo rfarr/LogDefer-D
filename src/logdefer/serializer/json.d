@@ -122,13 +122,13 @@ struct JSONSerializer(Writer = DelegateWriter)
                         `["`,
                         timer.name,
                         `",`,
-                        to!string(timer.start.seconds),
+                        to!string(timer.startDuration.seconds),
                         `.`,
-                        format("%06d", timer.start.usecs),
+                        format("%06d", timer.startDuration.usecs),
                         `,`,
-                        to!string(timer.end.seconds),
+                        to!string(timer.endDuration.seconds),
                         `.`,
-                        format("%06d", timer.end.usecs),
+                        format("%06d", timer.endDuration.usecs),
                         `],`
                     ]);
                 }

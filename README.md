@@ -29,6 +29,8 @@ void someEventHandler(Foo foo, Bar bar)
         writeln(msg);
     });
 
+    logger["RequestID"] = 123; // stored in data section
+
     logger.info("Processing event: ", foo);
     scope(failure) { logger.error("Error processing ", bar); };
 
@@ -90,8 +92,49 @@ The provided JSON serializer follows the following structure:
 
 The data section is useful for storing data that is associated with the 'context' of the event.  For example storing a user's IP or session cookie.  Also things like global request ids, operation status (ie whether the requested operation suceeded or failed), event data, etc.  Basically anything you can think of that you would like to be able to query by later.  The only constraint on the key/value is that they are serializable to string via to!string.
 
+**NOTE**: The stringification of the key/value of the data is done eagerly when assigned.  Slow to!string can thus slow down the app thread.
 
-### TimeProvider
+### Timers
+
+By default the start time and duration from when the logger is first created until it is destroyed is recorded under `start` and `end`.  If you desire finer grained timing there is also a timer facility that allows you to create your own sub-timers:
+
+```d
+auto logger = ...;
+
+void map()
+{
+    auto timer = logger.timer("Mapping");
+
+    // do stuff
+    ...
+} // <-- timer stops here
+
+void reduce()
+{
+    auto timer = logger.timer("Reduce");
+
+    // do stuff
+    ...
+} // <-- timer stops here
+```
+
+Will produce the normal log output as well as a `timers` section:
+
+```json
+{
+    "start": 12345.12345,
+    "end": 1.2,
+    "logs": [ ... ],
+    "timers": [
+        [ "Mapping", 0.2, 0.9 ],
+        [ "Reduce", 0.91, 1.15 ]
+    ]
+}
+```
+
+Each entry will contain the timer name, and start and end offset of that timer relative to the entire log event's start time.  This allows you to get detailed timing data for all aspects of the execution path.
+
+### Custom Time Provider
 
 By default LogDefer will use Clock.currTime to determine the start timestamp for logging events.  If you would like to override this behaviour with your own time source you just need to implement the opCall to return a SysTime:
 
@@ -107,4 +150,4 @@ logger.info(...);
 
 ### Visualization
 
-Once written you can use separate tools to process and render the date in a useable format.  An excellent tool to use is `log-defer-viz` available at https://github.com/hoytech/Log-Defer-Viz
+Once the logs are written, you can use a separate tool to process and render the data into a useable format.  An excellent tool to use is `log-defer-viz` available at https://github.com/hoytech/Log-Defer-Viz

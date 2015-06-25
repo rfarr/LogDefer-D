@@ -64,13 +64,13 @@ struct Timer
         }
 
         // Get the start offset of the timer
-        TickDuration start() const
+        TickDuration startDuration() const
         {
             return start_;
         }
 
         // Get the end offset of the timer
-        TickDuration end() const
+        TickDuration endDuration() const
         {
             return sw_.peek() + start_;
         }
@@ -87,4 +87,37 @@ struct Timer
             sw_.stop();
             child_ = null;
         }
+}
+
+version (unittest)
+{
+    import core.thread;
+}
+
+unittest
+{
+    auto timer1 = Timer("test1");
+    auto timer2 = Timer("test2");
+
+    auto start1 = TickDuration(123);
+    auto start2 = TickDuration(456);
+
+    {
+        auto scope1 = timer1.start_timer(start1);
+        {
+            auto scope2 = timer2.start_timer(start2);
+            Thread.sleep(dur!"msecs"(250));
+        }
+        Thread.sleep(dur!"msecs"(250));
+    }
+
+    assert(timer1.name == "test1");
+    assert(timer1.startDuration == start1);
+    assert(cast(Duration)timer1.endDuration > start1 + dur!"msecs"(400));
+    assert(cast(Duration)timer1.endDuration < start1 + dur!"msecs"(600));
+
+    assert(timer2.name == "test2");
+    assert(timer2.startDuration == start2);
+    assert(cast(Duration)timer2.endDuration > start2 + dur!"msecs"(200));
+    assert(cast(Duration)timer2.endDuration < start2 + dur!"msecs"(300));
 }

@@ -87,10 +87,10 @@ struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeP
         }
 
         // Add given parameters to the log with given verbosity
-        void add_log(Param...)(Verbosity verbosity, const ref Param params)
+        void add_log(Param...)(Verbosity verbosity, const Param params)
         {
             // Log threshold not met, ignore log
-            if (verbosity < logLevel_)
+            if (verbosity > logLevel_)
             {
                 return;
             }
@@ -106,7 +106,7 @@ struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeP
         }
 
         // Add/update associated metadata with the event context
-        void data(Key, Value)(const auto ref Key key, const auto ref Value value)
+        void opIndexAssign(Key, Value)(const auto ref Value value, const auto ref Key key)
         {
             eventContext_.metadata[to!string(key)] = to!string(value);
         }
@@ -116,7 +116,7 @@ struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeP
             return eventContext_.metadata[to!string(key)];
         }
 
-        Timer.Scoped timer(string timerName)
+        auto timer(string timerName)
         {
             eventContext_.timers.put(Timer(timerName));
             return eventContext_.timers.data[$-1].start_timer(sw_.peek());
@@ -144,7 +144,12 @@ struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeP
         }
 
         // Manipulate and view log levels...
-        void logLevel(LogLevel logLevel)
+        void seLogLevel(LogLevel logLevel)
+        {
+            logLevel_ = logLevel;
+        }
+
+        void setLogLevel(int logLevel)
         {
             logLevel_ = logLevel;
         }
@@ -159,9 +164,19 @@ struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeP
             return logLevel_ <= LogLevel.Error;
         }
 
+        void setError()
+        {
+            logLevel_ = LogLevel.Error;
+        }
+
         bool isWarn()
         {
             return logLevel_ <= LogLevel.Warn;
+        }
+
+        void setWarn()
+        {
+            logLevel_ = LogLevel.Warn;
         }
 
         bool isInfo()
@@ -169,9 +184,19 @@ struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeP
             return logLevel_ <= LogLevel.Info;
         }
 
+        void setInfo()
+        {
+            logLevel_ = LogLevel.Info;
+        }
+
         bool isTrace()
         {
             return logLevel_ <= LogLevel.Trace;
+        }
+
+        void setTrace()
+        {
+            logLevel_ = LogLevel.Trace;
         }
 
 
@@ -181,7 +206,7 @@ struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeP
         TimeProvider timeProvider_;
         StopWatch sw_;
         EventContext eventContext_;
-        int logLevel_ = int.min;
+        int logLevel_ = int.max;
 
         // Commit the logs in the buffer
         void commit()
@@ -189,4 +214,181 @@ struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeP
             eventContext_.endDuration = sw_.peek();
             serializer_(eventContext_);
         }
+}
+
+version (unittest)
+{
+    import std.stdio;
+    import std.typecons;
+
+    auto time = ()
+    {
+        return SysTime(1234);
+    };
+
+    const(EventContext)[] events;
+    auto serializer = (const ref EventContext eventContext)
+    {
+        events ~= eventContext;
+    };
+
+    alias Spec = Tuple!(int, string);
+
+    auto testSpecs = [
+        Spec(45, "custom 1"),
+        Spec(40, "trace"),
+        Spec(30, "info"),
+        Spec(20, "warn"),
+        Spec(10, "error"),
+        Spec(5, "custom 2"),
+    ];
+
+    void verifyLogs(const ref EventContext evt, Spec[] specs)
+    {
+        auto logs = evt.logs.data;
+        assert(logs.length == specs.length);
+        uint i;
+        foreach(spec; specs)
+        {
+            assert(logs[i].verbosity == spec[0]);
+            assert(logs[i].msg == spec[1]);
+            i++;
+        }
+    }
+
+    alias TestLogger = Logger!(typeof(serializer), typeof(time));
+
+    void testLog(ref TestLogger logger)
+    {
+        logger.add_log(45, "custom 1");
+        logger.trace("trace");
+        logger.info("info");
+        logger.warn("warn");
+        logger.error("error");
+        logger.add_log(5, "custom 2");
+
+    }
+}
+
+// Default log level, start time
+unittest
+{
+    events.destroy;
+
+    {
+        auto logger = TestLogger(serializer, time);
+        testLog(logger);
+        {
+            auto timer = logger.timer("timer");
+        }
+        logger["RequestID"] = 7;
+        assert(events.length == 0);
+    }
+
+    assert(events.length == 1);
+
+    auto evt = events.front;
+    assert(evt.startTime == time());
+    assert(evt.endDuration > TickDuration(0));
+
+    assert(evt.metadata.length == 1);
+    assert(evt.metadata["RequestID"] == "7");
+
+    assert(evt.timers.data.length == 1);
+    assert(evt.timers.data.front.name == "timer");
+    assert(evt.timers.data.front.startDuration > TickDuration(0));
+    assert(evt.timers.data.front.endDuration > TickDuration(0));
+
+    verifyLogs(evt, testSpecs);
+}
+
+// Log level set to trace
+unittest
+{
+    events.destroy;
+
+    {
+        auto logger = TestLogger(serializer, time);
+        logger.setTrace();
+
+        testLog(logger);
+    }
+
+    verifyLogs(events.front, testSpecs[1..$]);
+}
+
+// Log level set to info 
+unittest
+{
+    events.destroy;
+
+    {
+        auto logger = TestLogger(serializer, time);
+        logger.setInfo();
+
+        testLog(logger);
+    }
+
+    verifyLogs(events.front, testSpecs[2..$]);
+}
+
+// Log level set to warn 
+unittest
+{
+    events.destroy;
+
+    {
+        auto logger = TestLogger(serializer, time);
+        logger.setWarn();
+
+        testLog(logger);
+    }
+
+    verifyLogs(events.front, testSpecs[3..$]);
+}
+
+
+// Log level set to error 
+unittest
+{
+    events.destroy;
+
+    {
+        auto logger = TestLogger(serializer, time);
+        logger.setError();
+
+        testLog(logger);
+    }
+
+    verifyLogs(events.front, testSpecs[4..$]);
+}
+
+// Log level set to custom
+unittest
+{
+    events.destroy;
+
+    {
+        auto logger = TestLogger(serializer, time);
+        logger.setLogLevel(7);
+
+        testLog(logger);
+    }
+
+    verifyLogs(events.front, testSpecs[5..$]);
+}
+
+// Log level set to 0
+unittest
+{
+    events.destroy;
+
+    {
+        auto logger = TestLogger(serializer, time);
+        logger.setLogLevel(0);
+
+        testLog(logger);
+    }
+
+    verifyLogs(events.front, testSpecs[6..$]);
 }
