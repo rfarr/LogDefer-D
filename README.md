@@ -124,7 +124,7 @@ Will produce the normal log output as well as a `timers` section:
 {
     "start": 12345.12345,
     "end": 1.2,
-    "logs": [ ... ],
+    "logs": [],
     "timers": [
         [ "Mapping", 0.2, 0.9 ],
         [ "Reduce", 0.91, 1.15 ]
@@ -154,9 +154,8 @@ Once the logs are written, you can use a separate tool to process and render the
 
 ### See Also
 
-Log::Defer (https://github.com/hoytech/Log-Defer) - the reference implementation
-Log::Defer::Viz (https://github.com/hoytech/Log-Defer-Viz) - handy visualization tool
-
+[Log::Defer](https://github.com/hoytech/Log-Defer) - the reference implementation
+[Log::Defer::Viz](https://github.com/hoytech/Log-Defer-Viz) - handy visualization tool
 
 ### Author
 
