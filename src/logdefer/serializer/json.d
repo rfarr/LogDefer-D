@@ -154,7 +154,7 @@ struct JSONSerializer(Writer = DelegateWriter)
 
 
         // Fast lookup for escapes
-        static string mapping[255];
+        static string[255] mapping;
         static this()
         {
             foreach (i; 0..32)
@@ -222,6 +222,7 @@ struct JSONSerializer(Writer = DelegateWriter)
 
 version (unittest)
 {
+    import core.exception;
     import std.json;
     import std.math;
     import std.stdio;
@@ -230,9 +231,10 @@ version (unittest)
     auto duration = dur!"msecs"(250);
 }
 
-// Basic start and end timer
 unittest
 {
+    writeln("[UnitTest JSONSerializer] - basic start and end timer");
+
     auto ec = EventContext();
     ec.startTime = now;
     ec.endDuration = duration.to!TickDuration;
@@ -248,9 +250,10 @@ unittest
 
 }
 
-// Data section
 unittest
 {
+    writeln("[UnitTest JSONSerializer] - data section");
+
     auto ec = EventContext();
     ec.startTime = now;
     ec.endDuration = duration.to!TickDuration;
@@ -270,9 +273,10 @@ unittest
     assert(json["data"]["foo"].str == "bar");
 }
 
-// Log entries
 unittest
 {
+    writeln("[UnitTest JSONSerializer] - log entries");
+
     auto ec = EventContext();
     ec.startTime = now;
     ec.endDuration = duration.to!TickDuration;
@@ -303,9 +307,10 @@ unittest
     assert(json["logs"][2][2].str == "");
 }
 
-// UTF-8
 unittest
 {
+    writeln("[UnitTest JSONSerializer] - UTF-8");
+
     auto ec = EventContext();
     ec.startTime = now;
     ec.endDuration = duration.to!TickDuration;
@@ -327,9 +332,10 @@ unittest
     assert(json["data"][x"e8af b7e6 b182 4944 0a00"].str == x"3731 202d 20e9 98bf e5b0 94e6 b395 0a00");
 }
 
-// Invalid UTF-8
 unittest
 {
+    writeln("[UnitTest JSONSerializer] - invalid UTF-8");
+
     auto ec = EventContext();
     ec.startTime = now;
     ec.endDuration = duration.to!TickDuration;
@@ -341,9 +347,10 @@ unittest
     assertThrown!UTFException(serializer(ec));
 }
 
-// Control characters
 unittest
 {
+    writeln("[UnitTest JSONSerializer] - control characters");
+
     auto ec = EventContext();
     ec.startTime = now;
     ec.endDuration = duration.to!TickDuration;
@@ -362,9 +369,10 @@ unittest
     assert(json["logs"][0][2].str == "\t\tconh\btrol\nchar//a\\cters\0");
 }
 
-//Too large
 unittest
 {
+    writeln("[UnitTest JSONSerializer] - message too long");
+
     auto ec = EventContext();
     ec.startTime = now;
     ec.endDuration = duration.to!TickDuration;

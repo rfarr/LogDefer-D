@@ -92,10 +92,13 @@ struct Timer
 version (unittest)
 {
     import core.thread;
+    import std.stdio;
 }
 
 unittest
 {
+    writeln("[UnitTest Timer] - aprox duration");
+
     auto timer1 = Timer("test1");
     auto timer2 = Timer("test2");
 

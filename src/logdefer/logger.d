@@ -270,9 +270,10 @@ version (unittest)
     }
 }
 
-// Default log level, start time
 unittest
 {
+    writeln("[UnitTest Logger] - default log level, start time");
+
     events.destroy;
 
     {
@@ -302,9 +303,10 @@ unittest
     verifyLogs(evt, testSpecs);
 }
 
-// Log level set to trace
 unittest
 {
+    writeln("[UnitTest Logger] - trace log level");
+
     events.destroy;
 
     {
@@ -317,9 +319,10 @@ unittest
     verifyLogs(events.front, testSpecs[1..$]);
 }
 
-// Log level set to info 
 unittest
 {
+    writeln("[UnitTest Logger] - info log level");
+
     events.destroy;
 
     {
@@ -335,6 +338,8 @@ unittest
 // Log level set to warn 
 unittest
 {
+    writeln("[UnitTest Logger] - warn log level");
+
     events.destroy;
 
     {
@@ -351,6 +356,8 @@ unittest
 // Log level set to error 
 unittest
 {
+    writeln("[UnitTest Logger] - error log level");
+
     events.destroy;
 
     {
@@ -366,6 +373,8 @@ unittest
 // Log level set to custom
 unittest
 {
+    writeln("[UnitTest Logger] - custom log level");
+
     events.destroy;
 
     {
@@ -381,6 +390,8 @@ unittest
 // Log level set to 0
 unittest
 {
+    writeln("[UnitTest Logger] - 0 log level");
+
     events.destroy;
 
     {
