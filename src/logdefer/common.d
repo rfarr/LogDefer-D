@@ -6,7 +6,6 @@ public import std.string;
 
 import std.stdio;
 
-import logdefer.serializer.json;
 import logdefer.timer;
 
 alias Verbosity = immutable int;
@@ -45,9 +44,7 @@ struct EventContext
     }
 }
 
-// By default use the JSON serializer
 alias DelegateWriter = void delegate(string msg);
-alias DefaultSerializer = JSONSerializer!(DelegateWriter);
 
 // By default use system clock
 static const DefaultTimeProvider = () {

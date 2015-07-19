@@ -1,6 +1,7 @@
 module logdefer.logger;
 
 public import logdefer.common;
+import logdefer.serializer.json;
 import logdefer.timer;
 
 import std.conv;
@@ -41,7 +42,10 @@ alias DefaultLogger = Logger!();
   internal buffer.  Once the object goes out of scope the logs are passed to the
   serializer which handles formatting and writing out the logs.
   */
-struct Logger(Serializer = DefaultSerializer, TimeProvider = typeof(DefaultTimeProvider))
+struct Logger(
+    Serializer = JSONSerializer!(DelegateWriter),
+    TimeProvider = typeof(DefaultTimeProvider)
+)
 {
     public:
         
