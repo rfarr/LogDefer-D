@@ -71,7 +71,7 @@ struct JSONSerializer(Writer = DelegateWriter)
             if (eventContext.metadata)
             {
                 write(`,"data":{`);
-                //FIXME use byKeyValue in newer compiler
+                //FIXME use byKeyValue when supported by ldc
                 foreach(const ref key; eventContext.metadata.byKey())
                 {
                     writeAll([

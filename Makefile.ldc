@@ -1,0 +1,40 @@
+LDC=/usr/bin/env ldc2
+RELEASE_DFLAGS=-O -w -g -release
+DFLAGS=-od=$(BUILD)/obj -oq
+LIB_DFLAGS=-lib
+TEST_DFLAGS=-main -unittest -w -g
+INCLUDES=-Isrc/
+
+BUILD=builds/
+SRCS=src/logdefer/*.d src/logdefer/serializer/*.d
+EXAMPLES=examples/*.d
+
+LIB_NAME=logdeferd
+LIB=$(BUILD)$(LIB_NAME).a
+
+TEST_NAME=logdefer_unittest
+TEST=$(BUILD)$(TEST_NAME)
+
+.PHONY: clean
+
+all: test examples
+
+lib:
+	$(LDC) -of=$(LIB) $(INCLUDES) $(DFLAGS) $(LIB_DFLAGS) $(RELEASE_DFLAGS) $(SRCS)
+
+test:
+	$(LDC) -of=$(TEST) $(INCLUDES) $(DFLAGS) $(TEST_DFLAGS) $(SRCS)
+	$(TEST)
+
+examples: \
+	basic \
+	perf
+
+basic: lib
+	$(LDC) -of=$(BUILD)basic $(INCLUDES) $(DFLAGS) $(RELEASE_DFLAGS) examples/basic.d $(LIB)
+
+perf: lib
+	$(LDC) -of=$(BUILD)perf $(INCLUDES) $(DFLAGS) $(RELEASE_DFLAGS) examples/perf.d $(LIB)
+
+clean:
+	rm -rf $(BUILD)

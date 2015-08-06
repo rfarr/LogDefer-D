@@ -42,7 +42,10 @@ struct Timer
 
         ~this()
         {
-            sw_.stop();
+            if (sw_.running)
+            {
+                sw_.stop();
+            }
             // If child freed don't do anything, else terminate
             child_ && child_.terminate();
         }
@@ -104,7 +107,6 @@ unittest
 
     auto start1 = TickDuration(123);
     auto start2 = TickDuration(456);
-
     {
         auto scope1 = timer1.start_timer(start1);
         {
