@@ -36,6 +36,24 @@ struct EventContext
     Appender!(LogEntry[]) logs; // log entries
     Appender!(Timer[]) timers; // user timers
 
+    this(immutable EventContext other) immutable
+    {
+        startTime = other.startTime;
+        endDuration = other.endDuration;
+        metadata = other.metadata;
+        logs = other.logs;
+        timers = other.timers;
+    }
+
+    this(shared EventContext other) shared
+    {
+        startTime = other.startTime;
+        endDuration = other.endDuration;
+        metadata = other.metadata;
+        logs = other.logs;
+        timers = other.timers;
+    }
+
     string toString() const
     {
         return "%s, %s, %s, %(%s, %), ".format(
