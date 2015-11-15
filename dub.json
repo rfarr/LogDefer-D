@@ -1,0 +1,12 @@
+{
+    "name": "logdefer",
+    "description": "Structured and deferred logging.",
+    "homepage": "https://github.com/rfarr/LogDefer-D",
+    "license": "ISC",
+    "authors": [
+        "Richard Farr"
+    ],
+
+    "targetName": "logdeferd",
+    "targetPath": "builds"
+}

@@ -9,13 +9,13 @@ BUILD=builds/
 SRCS=src/logdefer/*.d src/logdefer/serializer/*.d
 EXAMPLES=examples/*.d
 
-LIB_NAME=logdeferd
+LIB_NAME=liblogdeferd
 LIB=$(BUILD)$(LIB_NAME).a
 
 TEST_NAME=logdefer_unittest
 TEST=$(BUILD)$(TEST_NAME)
 
-.PHONY: clean
+.PHONY: clean lib test
 
 all: test examples
 

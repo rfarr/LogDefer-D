@@ -1,2 +1,4 @@
 builds/
 *.swp
+.dub
+dub.selections.json
