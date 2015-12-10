@@ -14,7 +14,7 @@ import std.utf;
   Basic JSON serializer that outputs in the standard Log::Defer format.
   See https://metacpan.org/pod/Log::Defer for more details on the format
   and tools to render it.
-  Since output is fixed use an optimized algorithm.
+  Since output format is fixed this uses an optimized algorithm.
   This is about 2x faster than using std.json
   */
 struct JSONSerializer(Writer = DelegateWriter)

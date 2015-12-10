@@ -127,22 +127,22 @@ struct Logger(
         }
 
         // Convenience wrappers...
-        void error(Param...)(auto const Param params)
+        void error(Param...)(auto ref const Param params)
         {
             add_log(LogLevel.Error, params);
         }
 
-        void warn(Param...)(auto const Param params)
+        void warn(Param...)(auto ref const Param params)
         {
             add_log(LogLevel.Warn, params);
         }
 
-        void info(Param...)(auto const Param params)
+        void info(Param...)(auto ref const Param params)
         {
             add_log(LogLevel.Info, params);
         }
 
-        void trace(Param...)(auto const Param params)
+        void trace(Param...)(auto ref const Param params)
         {
             add_log(LogLevel.Trace, params);
         }
