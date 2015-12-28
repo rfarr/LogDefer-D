@@ -49,8 +49,6 @@ struct Logger(
 {
     public:
         
-        @disable this();
-
         @disable this(this);
 
         /*
@@ -148,7 +146,7 @@ struct Logger(
         }
 
         // Manipulate and view log levels...
-        void seLogLevel(LogLevel logLevel)
+        void setLogLevel(LogLevel logLevel)
         {
             logLevel_ = logLevel;
         }

@@ -40,6 +40,8 @@ struct JSONSerializer(Writer = DelegateWriter)
             write("}");
 
             writer_(buffer_[0..length_].idup);
+
+            length_ = 0;
         }
 
     private:
