@@ -156,8 +156,8 @@ struct JSONSerializer(Writer = DelegateWriter)
 
 
         // Fast lookup for escapes
-        static string[255] mapping;
-        static this()
+        static immutable string[255] mapping;
+        shared static this()
         {
             foreach (i; 0..32)
             {
