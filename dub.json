@@ -6,6 +6,9 @@
     "authors": [
         "Richard Farr"
     ],
+    "dependencies": {
+        "unixtime": "0.2.0"
+    },
 
     "targetName": "logdeferd",
     "targetPath": "builds"

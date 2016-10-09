@@ -2,10 +2,12 @@ DMD=/usr/bin/env dmd
 RELEASE_DFLAGS=-O -w -g -inline -release
 LIB_DFLAGS=-lib
 TEST_DFLAGS=-main -unittest -w -g
-INCLUDES=-Isrc/
+INCLUDES=-Isrc/ -I$(UNIXTIME)
+
+UNIXTIME = lib/unixtime/src
 
 BUILD=builds/
-SRCS=src/logdefer/*.d src/logdefer/serializer/*.d
+SRCS=src/logdefer/*.d src/logdefer/serializer/*.d src/logdefer/time/*.d $(UNIXTIME)/*.d
 EXAMPLES=examples/*.d
 
 LIB_NAME=liblogdeferd

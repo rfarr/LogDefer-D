@@ -58,13 +58,9 @@ struct JSONSerializer(Writer = DelegateWriter)
         {
             writeAll([
                 `"start":`,
-                to!string(eventContext.startTime.toUnixTime),
-                ".",
-                format("%06d", eventContext.startTime.fracSec.usecs),
+                to!string(eventContext.realStartTime),
                 `,"end":`,
-                to!string(eventContext.endDuration.seconds),
-                ".",
-                format("%06d", eventContext.endDuration.usecs),
+                to!string(eventContext.endOffset.toUnits!Seconds),
             ]);
         }
 
@@ -98,9 +94,7 @@ struct JSONSerializer(Writer = DelegateWriter)
                 {
                     writeAll([
                         "[",
-                        to!string(entry.eventDuration.seconds),
-                        ".",
-                        format("%06d", entry.eventDuration.usecs),
+                        to!string(entry.endOffset.toUnits!Seconds),
                         ",",
                         to!string(entry.verbosity),
                         `,"`,
@@ -124,13 +118,9 @@ struct JSONSerializer(Writer = DelegateWriter)
                         `["`,
                         timer.name,
                         `",`,
-                        to!string(timer.startDuration.seconds),
-                        `.`,
-                        format("%06d", timer.startDuration.usecs),
+                        to!string(timer.start.toUnits!Seconds),
                         `,`,
-                        to!string(timer.endDuration.seconds),
-                        `.`,
-                        format("%06d", timer.endDuration.usecs),
+                        to!string(timer.end.toUnits!Seconds),
                         `],`
                     ]);
                 }
@@ -221,16 +211,17 @@ struct JSONSerializer(Writer = DelegateWriter)
         }
 }
 
-
 version (unittest)
 {
-    import core.exception;
-    import std.json;
-    import std.math;
-    import std.stdio;
+    import core.exception : RangeError;
+    import std.json : JSONValue, parseJSON;
+    import std.stdio : writeln;
 
-    auto now = SysTime(unixTimeToStdTime(1434608500), UTC());
-    auto duration = dur!"msecs"(250);
+    import logdefer.time.duration : Millis, Nanos;
+    import unixtime : UnixTimeHiRes;
+
+    auto now = UnixTimeHiRes(1434608500);
+    Nanos duration = Millis(250);
 }
 
 unittest
@@ -238,8 +229,8 @@ unittest
     writeln("[UnitTest JSONSerializer] - basic start and end timer");
 
     auto ec = EventContext();
-    ec.startTime = now;
-    ec.endDuration = duration.to!TickDuration;
+    ec.realStartTime = now;
+    ec.endOffset = duration;
     
     JSONValue json;
     auto serializer = JSONSerializer!(DelegateWriter)((string msg) { json = parseJSON(msg); });
@@ -257,8 +248,8 @@ unittest
     writeln("[UnitTest JSONSerializer] - data section");
 
     auto ec = EventContext();
-    ec.startTime = now;
-    ec.endDuration = duration.to!TickDuration;
+    ec.realStartTime = now;
+    ec.endOffset = duration;
     ec.metadata["7"] = "2.1";
     ec.metadata["foo"] = "bar";
 
@@ -280,11 +271,11 @@ unittest
     writeln("[UnitTest JSONSerializer] - log entries");
 
     auto ec = EventContext();
-    ec.startTime = now;
-    ec.endDuration = duration.to!TickDuration;
-    ec.logs.put(LogEntry(duration.to!TickDuration, 10, "line 1"));
-    ec.logs.put(LogEntry((duration*2).to!TickDuration, 15, "line 2"));
-    ec.logs.put(LogEntry((duration*3).to!TickDuration, 15, ""));
+    ec.realStartTime = now;
+    ec.endOffset = duration;
+    ec.logs.put(LogEntry(duration, 10, "line 1"));
+    ec.logs.put(LogEntry((duration * 2), 15, "line 2"));
+    ec.logs.put(LogEntry((duration * 3), 15, ""));
 
     JSONValue json;
     auto serializer = JSONSerializer!(DelegateWriter)((string msg) { json = parseJSON(msg); });
@@ -314,10 +305,10 @@ unittest
     writeln("[UnitTest JSONSerializer] - UTF-8");
 
     auto ec = EventContext();
-    ec.startTime = now;
-    ec.endDuration = duration.to!TickDuration;
+    ec.realStartTime = now;
+    ec.endOffset = duration;
     ec.metadata[x"e8af b7e6 b182 4944 0a00"] = x"3731 202d 20e9 98bf e5b0 94e6 b395 0a00";
-    ec.logs.put(LogEntry(duration.to!TickDuration, 1, x"e994 99e8 afaf 0a00"));
+    ec.logs.put(LogEntry(duration, 1, x"e994 99e8 afaf 0a00"));
 
     JSONValue json;
     auto serializer = JSONSerializer!(DelegateWriter)((string msg) { json = parseJSON(msg); });
@@ -339,10 +330,10 @@ unittest
     writeln("[UnitTest JSONSerializer] - invalid UTF-8");
 
     auto ec = EventContext();
-    ec.startTime = now;
-    ec.endDuration = duration.to!TickDuration;
+    ec.realStartTime = now;
+    ec.endOffset = duration;
     // Invalid sequence
-    ec.logs.put(LogEntry(duration.to!TickDuration, 1, x"ff01"));
+    ec.logs.put(LogEntry(duration, 1, x"ff01"));
 
     JSONValue json;
     auto serializer = JSONSerializer!(DelegateWriter)((string msg) { json = parseJSON(msg); });
@@ -354,10 +345,10 @@ unittest
     writeln("[UnitTest JSONSerializer] - control characters");
 
     auto ec = EventContext();
-    ec.startTime = now;
-    ec.endDuration = duration.to!TickDuration;
+    ec.realStartTime = now;
+    ec.endOffset = duration;
     ec.logs.put(LogEntry(
-        duration.to!TickDuration, 10, "\t\tconh\btrol\nchar//a\\cters\0")
+        duration, 10, "\t\tconh\btrol\nchar//a\\cters\0")
     );
 
     JSONValue json;
@@ -376,13 +367,13 @@ unittest
     writeln("[UnitTest JSONSerializer] - message too long");
 
     auto ec = EventContext();
-    ec.startTime = now;
-    ec.endDuration = duration.to!TickDuration;
+    ec.realStartTime = now;
+    ec.endOffset = duration;
 
     foreach(i; 0..10000)
     {
         ec.logs.put(LogEntry(
-            duration.to!TickDuration, 10, "too long")
+            duration, 10, "too long")
         );
     }
 

@@ -1,11 +1,11 @@
 module logdefer.logger;
 
+import std.conv : to;
+
 public import logdefer.common;
 import logdefer.serializer.json;
 import logdefer.timer;
-
-import std.conv;
-import std.traits;
+import logdefer.time.utils : toDuration;
 
 alias DefaultLogger = Logger!();
 
@@ -33,9 +33,9 @@ alias DefaultLogger = Logger!();
 
   If you want to provide your own source of time (for testing, or some external
   time provider) you just call the constructor with your TimeProvider which
-  again must implement opCall and returns a SysTime:
+  again must implement opCall and returns a UnixTime:
 
-  auto myTimeProvider = () { return SysTime(0); };
+  auto myTimeProvider = () { return UnixTime(0); };
   auto logger = Logger!(MySerializer, typeof(myTimeProvider))(xxx, myTimeProvider);
   
   As you log against the log defer instance it will accumulate the logs into its
@@ -58,8 +58,9 @@ struct Logger(
         this()(void delegate(string msg) callback)
         {
             serializer_ = Serializer(callback);
-            eventContext_.startTime = DefaultTimeProvider();
-            sw_.start();
+            eventContext_.realStartTime = DefaultTimeProvider();
+            // TODO time provider
+            eventContext_.monotonicStartTime = UnixTimeHiRes.now!(ClockType.MONOTONIC)();
         }
 
         /*
@@ -68,8 +69,7 @@ struct Logger(
         this()(Serializer serializer)
         {
             serializer_  = serializer;
-            eventContext_.startTime = DefaultTimeProvider();
-            sw_.start();
+            eventContext_.realStartTime = DefaultTimeProvider();
         }
 
         /*
@@ -78,8 +78,7 @@ struct Logger(
         this()(Serializer serializer, TimeProvider timeProvider)
         {
             serializer_ = serializer;
-            eventContext_.startTime = timeProvider();
-            sw_.start();
+            eventContext_.realStartTime = timeProvider();
         }
 
         // Commit log when going out of scope
@@ -104,7 +103,7 @@ struct Logger(
                 msg.put(to!string(param));
             }
             // Store the message along with verbosity and duration
-            eventContext_.logs.put(LogEntry(sw_.peek(), verbosity, msg.data));
+            eventContext_.logs.put(LogEntry(toDuration!Nanos(eventContext_.monotonicStartTime, UnixTimeHiRes.now!(ClockType.MONOTONIC)()), verbosity, msg.data));
         }
 
         // Add/update associated metadata with the event context
@@ -120,8 +119,8 @@ struct Logger(
 
         auto timer(string timerName)
         {
-            eventContext_.timers.put(Timer(timerName));
-            return eventContext_.timers.data[$-1].start_timer(sw_.peek());
+            eventContext_.timers.put(Timer(timerName, eventContext_.monotonicStartTime));
+            return eventContext_.timers.data[$-1].start_timer();
         }
 
         // Convenience wrappers...
@@ -206,14 +205,13 @@ struct Logger(
 
         Serializer serializer_ = void;
         TimeProvider timeProvider_;
-        StopWatch sw_;
         EventContext eventContext_;
         int logLevel_ = int.max;
 
         // Commit the logs in the buffer
         void commit()
         {
-            eventContext_.endDuration = sw_.peek();
+            eventContext_.endOffset = toDuration!Nanos(eventContext_.monotonicStartTime, UnixTimeHiRes.now!(ClockType.MONOTONIC)());
             serializer_(eventContext_);
         }
 }
@@ -225,7 +223,7 @@ version (unittest)
 
     auto time = ()
     {
-        return SysTime(1234);
+        return UnixTimeHiRes(1234);
     };
 
     const(EventContext)[] events;
@@ -291,16 +289,16 @@ unittest
     assert(events.length == 1);
 
     auto evt = events.front;
-    assert(evt.startTime == time());
-    assert(evt.endDuration > TickDuration(0));
+    assert(evt.realStartTime == time());
+    assert(evt.endOffset.value > 0);
 
     assert(evt.metadata.length == 1);
     assert(evt.metadata["RequestID"] == "7");
 
     assert(evt.timers.data.length == 1);
     assert(evt.timers.data.front.name == "timer");
-    assert(evt.timers.data.front.startDuration > TickDuration(0));
-    assert(evt.timers.data.front.endDuration > TickDuration(0));
+    assert(evt.timers.data.front.start > 0);
+    assert(evt.timers.data.front.end > 0);
 
     verifyLogs(evt, testSpecs);
 }

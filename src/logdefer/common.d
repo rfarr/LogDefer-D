@@ -1,12 +1,13 @@
 module logdefer.common;
 
 public import std.array;
-public import std.datetime;
 public import std.string;
 
 import std.stdio;
 
+import logdefer.time.duration : Seconds, Nanos;
 import logdefer.timer;
+import unixtime : UnixTimeHiRes;
 
 alias Verbosity = immutable int;
 alias Metadata = string[string];
@@ -17,29 +18,31 @@ enum LogLevel { Error = 10, Warn = 20, Info = 30, Trace = 40 };
 // Represents a log entry
 struct LogEntry
 {
-    immutable TickDuration eventDuration; // duration from start
+    immutable Nanos endOffset; // duration from start
     immutable Verbosity verbosity; // log level
     immutable string msg; // log message
 
     string toString() const
     {
-        return "%s, %s, %s".format(eventDuration.msecs, verbosity, msg);
+        return "%s, %s, %s".format(endOffset, verbosity, msg);
     }
 }
 
 // Represents the event that the logs entries pertain to
 struct EventContext
 {
-    SysTime startTime; // Time when event first started
-    TickDuration endDuration; // Duration of the event
+    UnixTimeHiRes realStartTime; // Time when event first started
+    UnixTimeHiRes monotonicStartTime; // Time when event first started in monotonic clock
+    Nanos endOffset; // Monotonic duration of the event
     Metadata metadata; // Associated metadata with the event
     Appender!(LogEntry[]) logs; // log entries
     Appender!(Timer[]) timers; // user timers
 
     this(immutable EventContext other) immutable
     {
-        startTime = other.startTime;
-        endDuration = other.endDuration;
+        realStartTime = other.realStartTime;
+        monotonicStartTime = other.monotonicStartTime;
+        endOffset = other.endOffset;
         metadata = other.metadata;
         logs = other.logs;
         timers = other.timers;
@@ -47,8 +50,9 @@ struct EventContext
 
     this(shared EventContext other) shared
     {
-        startTime = other.startTime;
-        endDuration = other.endDuration;
+        realStartTime = other.realStartTime;
+        monotonicStartTime = other.monotonicStartTime;
+        endOffset = other.endOffset;
         metadata = other.metadata;
         logs = other.logs;
         timers = other.timers;
@@ -57,7 +61,7 @@ struct EventContext
     string toString() const
     {
         return "%s, %s, %s, %(%s, %), ".format(
-            startTime.toUnixTime, endDuration.msecs, metadata, logs.data
+            realStartTime, endOffset, metadata, logs.data
         );
     }
 }
@@ -66,5 +70,5 @@ alias DelegateWriter = void delegate(string msg);
 
 // By default use system clock
 static const DefaultTimeProvider = () {
-    return Clock.currTime;
+    return UnixTimeHiRes.now();
 };
