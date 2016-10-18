@@ -1,8 +1,10 @@
 module logdefer.time.duration;
 
+
 import core.checkedint : muls;
 import std.conv : to;
 import std.traits : isIntegral;
+
 
 alias Nanos = Duration!(TimeUnit.NANOS);
 alias Micros = Duration!(TimeUnit.MICROS);

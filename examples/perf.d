@@ -1,8 +1,8 @@
-import std.datetime;
-import std.stdio;
+import std.datetime : StopWatch;
+import std.stdio : writeln;
+import std.string : format;
 
 import logdefer.logger;
-import logdefer.serializer.json;
 
 immutable uint RUNS = 10_000;
 

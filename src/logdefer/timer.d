@@ -1,8 +1,10 @@
 module logdefer.timer;
 
+
 import logdefer.time.duration : Nanos;
 import logdefer.time.utils : toDuration;
-import unixtime : UnixTimeHiRes, ClockType;
+
+import unixtime : ClockType, UnixTimeHiRes;
 
 struct Timer
 {   

@@ -1,6 +1,6 @@
-import std.stdio;
+import std.stdio : writeln;
 
-import logdefer.logger;
+import logdefer.logger : DefaultLogger;
 
 /* Simple example, creates a log defer instance that writes to
    stdout using the default serializer

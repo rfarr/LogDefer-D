@@ -1,14 +1,14 @@
 module logdefer.serializer.json;
 
-import logdefer.common;
 
-import std.algorithm;
-import std.array;
-import std.conv;
-import std.datetime;
-import std.exception;
-import std.string;
-import std.utf;
+import logdefer.common : DelegateWriter, EventContext, LogEntry;
+
+import std.array : Appender;
+import std.conv : to;
+import std.string : format;
+import std.utf : stride, UTFException;
+
+import logdefer.time.duration : Seconds;
 
 /**
   Basic JSON serializer that outputs in the standard Log::Defer format.
@@ -173,7 +173,7 @@ struct JSONSerializer(Writer = DelegateWriter)
            */
         string encode(string input)
         {
-            auto buffer = appender!string();
+            auto buffer = Appender!string();
             // Should be enough to handle most cases (except where most
             // characters are control characters
             buffer.reserve(input.length * 2);
@@ -214,6 +214,7 @@ struct JSONSerializer(Writer = DelegateWriter)
 version (unittest)
 {
     import core.exception : RangeError;
+    import std.exception : assertThrown;
     import std.json : JSONValue, parseJSON;
     import std.stdio : writeln;
 

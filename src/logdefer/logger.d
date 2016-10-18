@@ -1,11 +1,16 @@
 module logdefer.logger;
 
+
+import std.array : Appender;
 import std.conv : to;
 
-public import logdefer.common;
-import logdefer.serializer.json;
-import logdefer.timer;
+public import logdefer.common : DefaultTimeProvider, DelegateWriter, EventContext, LogEntry, LogLevel, Verbosity;
+import logdefer.serializer.json : JSONSerializer;
+import logdefer.time.duration : Nanos;
 import logdefer.time.utils : toDuration;
+import logdefer.timer : Timer;
+
+import unixtime : ClockType, UnixTimeHiRes;
 
 alias DefaultLogger = Logger!();
 
@@ -218,8 +223,9 @@ struct Logger(
 
 version (unittest)
 {
-    import std.stdio;
-    import std.typecons;
+    import std.array : front;
+    import std.stdio : writeln;
+    import std.typecons : Tuple;
 
     auto time = ()
     {

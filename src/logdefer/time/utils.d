@@ -3,6 +3,7 @@ module logdefer.time.utils;
 import logdefer.time.duration : Seconds, Millis, Micros, Nanos;
 import unixtime : UnixTime, UnixTimeHiRes;
 
+
 pure UnixTimeHiRes toUnixTimeHiRes(ADuration)(const ADuration aDuration)
 {
     static if (is(ADuration == Seconds))

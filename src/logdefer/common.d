@@ -1,13 +1,14 @@
 module logdefer.common;
 
-public import std.array;
-public import std.string;
 
-import std.stdio;
+import std.array : Appender, front;
+import std.string : format;
 
-import logdefer.time.duration : Seconds, Nanos;
-import logdefer.timer;
+import logdefer.timer : Timer;
+import logdefer.time.duration : Nanos;
+
 import unixtime : UnixTimeHiRes;
+
 
 alias Verbosity = immutable int;
 alias Metadata = string[string];
