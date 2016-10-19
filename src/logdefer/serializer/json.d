@@ -4,7 +4,6 @@ module logdefer.serializer.json;
 import logdefer.common : DelegateWriter, EventContext, LogEntry;
 
 import std.array : Appender;
-import std.conv : to;
 import std.string : format;
 import std.utf : stride, UTFException;
 
@@ -58,9 +57,9 @@ struct JSONSerializer(Writer = DelegateWriter)
         {
             writeAll([
                 `"start":`,
-                to!string(eventContext.realStartTime),
+                "%s".format(eventContext.realStartTime),
                 `,"end":`,
-                to!string(eventContext.endOffset.toUnits!Seconds),
+                "%.6f".format(eventContext.endOffset.toUnits!Seconds),
             ]);
         }
 
@@ -94,9 +93,9 @@ struct JSONSerializer(Writer = DelegateWriter)
                 {
                     writeAll([
                         "[",
-                        to!string(entry.endOffset.toUnits!Seconds),
+                        "%.6f".format(entry.endOffset.toUnits!Seconds),
                         ",",
-                        to!string(entry.verbosity),
+                        "%d".format(entry.verbosity),
                         `,"`,
                         encode(entry.msg),
                         `"],`
@@ -118,9 +117,9 @@ struct JSONSerializer(Writer = DelegateWriter)
                         `["`,
                         timer.name,
                         `",`,
-                        to!string(timer.start.toUnits!Seconds),
+                        "%.6f".format(timer.start.toUnits!Seconds),
                         `,`,
-                        to!string(timer.end.toUnits!Seconds),
+                        "%.6f".format(timer.end.toUnits!Seconds),
                         `],`
                     ]);
                 }

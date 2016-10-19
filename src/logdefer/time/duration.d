@@ -51,8 +51,9 @@ struct Duration(TimeUnit timeUnit)
             return toUnits!(ToUnits)(this);
         }
 
-        nothrow string toString() const
+        nothrow string toString(ToUnits = TimeUnit)() const
         {
+            //XXX
             return to!string(value) ~ " " ~ displayUnits;
         }
 
