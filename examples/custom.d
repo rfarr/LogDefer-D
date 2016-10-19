@@ -37,8 +37,7 @@ auto mySerializer = (const ref EventContext evt)
 // Let's live in the past!
 auto myTimeProvider = ()
 {
-    return Clock.currTime;
-    //return Clock.currTime - dur!"seconds"(123);
+    return Clock.currTime - dur!"seconds"(123);
 };
 
 alias MyLogger = Logger!(typeof(mySerializer), typeof(myTimeProvider));

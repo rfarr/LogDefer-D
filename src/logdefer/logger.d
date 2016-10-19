@@ -64,7 +64,6 @@ struct Logger(
         {
             serializer_ = Serializer(callback);
             eventContext_.realStartTime = DefaultTimeProvider();
-            // TODO time provider
             eventContext_.monotonicStartTime = UnixTimeHiRes.now!(ClockType.MONOTONIC)();
         }
 
@@ -75,6 +74,7 @@ struct Logger(
         {
             serializer_  = serializer;
             eventContext_.realStartTime = DefaultTimeProvider();
+            eventContext_.monotonicStartTime = UnixTimeHiRes.now!(ClockType.MONOTONIC)();
         }
 
         /*
@@ -84,6 +84,7 @@ struct Logger(
         {
             serializer_ = serializer;
             eventContext_.realStartTime = timeProvider();
+            eventContext_.monotonicStartTime = UnixTimeHiRes.now!(ClockType.MONOTONIC)();
         }
 
         // Commit log when going out of scope
