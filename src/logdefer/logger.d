@@ -93,7 +93,7 @@ struct Logger(
         }
 
         // Add given parameters to the log with given verbosity
-        void add_log(Param...)(Verbosity verbosity, const Param params)
+        void addLog(Param...)(Verbosity verbosity, const Param params)
         {
             // Log threshold not met, ignore log
             if (verbosity > logLevel_)
@@ -131,22 +131,22 @@ struct Logger(
         // Convenience wrappers...
         void error(Param...)(auto ref const Param params)
         {
-            add_log(LogLevel.Error, params);
+            addLog(LogLevel.Error, params);
         }
 
         void warn(Param...)(auto ref const Param params)
         {
-            add_log(LogLevel.Warn, params);
+            addLog(LogLevel.Warn, params);
         }
 
         void info(Param...)(auto ref const Param params)
         {
-            add_log(LogLevel.Info, params);
+            addLog(LogLevel.Info, params);
         }
 
         void trace(Param...)(auto ref const Param params)
         {
-            add_log(LogLevel.Trace, params);
+            addLog(LogLevel.Trace, params);
         }
 
         // Manipulate and view log levels...
@@ -266,12 +266,12 @@ version (unittest)
 
     void testLog(ref TestLogger logger)
     {
-        logger.add_log(45, "custom 1");
+        logger.addLog(45, "custom 1");
         logger.trace("trace");
         logger.info("info");
         logger.warn("warn");
         logger.error("error");
-        logger.add_log(5, "custom 2");
+        logger.addLog(5, "custom 2");
 
     }
 }
