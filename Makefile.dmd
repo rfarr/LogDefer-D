@@ -29,10 +29,14 @@ test:
 
 examples: \
 	basic \
+	custom \
 	perf
 
 basic: lib
 	$(DMD) -of$(BUILD)basic $(INCLUDES) $(RELEASE_DFLAGS) examples/basic.d $(LIB)
+
+custom: lib
+	$(DMD) -of$(BUILD)custom $(INCLUDES) $(RELEASE_DFLAGS) examples/custom.d $(LIB)
 
 perf: lib
 	$(DMD) -of$(BUILD)perf $(INCLUDES) $(RELEASE_DFLAGS) examples/perf.d $(LIB)

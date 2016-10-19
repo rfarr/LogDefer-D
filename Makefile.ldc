@@ -6,7 +6,7 @@ TEST_DFLAGS=-main -unittest -w -g
 INCLUDES=-Isrc/
 
 BUILD=builds/
-SRCS=src/logdefer/*.d src/logdefer/serializer/*.d
+SRCS=src/logdefer/*.d src/logdefer/serializer/*.d src/logdefer/time/*.d $(UNIXTIME)/*.d
 EXAMPLES=examples/*.d
 
 LIB_NAME=liblogdeferd
@@ -28,10 +28,14 @@ test:
 
 examples: \
 	basic \
+	custom \
 	perf
 
 basic: lib
 	$(LDC) -of=$(BUILD)basic $(INCLUDES) $(DFLAGS) $(RELEASE_DFLAGS) examples/basic.d $(LIB)
+
+custom: lib
+	$(LDC) -of=$(BUILD)custom $(INCLUDES) $(DFLAGS) $(RELEASE_DFLAGS) examples/custom.d $(LIB)
 
 perf: lib
 	$(LDC) -of=$(BUILD)perf $(INCLUDES) $(DFLAGS) $(RELEASE_DFLAGS) examples/perf.d $(LIB)
