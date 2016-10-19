@@ -55,7 +55,7 @@ struct Timer
         // stop timer
         Scoped start_timer()
         {
-            startOffset_ = toDuration!Nanos(startTime_, UnixTimeHiRes.now!(ClockType.MONOTONIC_PRECISE)());
+            startOffset_ = toDuration!Nanos(startTime_, UnixTimeHiRes.now!(ClockType.MONOTONIC)());
             auto child = Scoped(&this);
             child_ = &child;
             return child;
@@ -75,7 +75,7 @@ struct Timer
         // Get the end offset of the timer
         Nanos end() const
         {
-            return toDuration!Nanos(startTime_, UnixTimeHiRes.now!(ClockType.MONOTONIC_PRECISE)());
+            return toDuration!Nanos(startTime_, UnixTimeHiRes.now!(ClockType.MONOTONIC)());
         }
 
     private:
@@ -103,7 +103,7 @@ unittest
 {
     writeln("[UnitTest Timer] - aprox duration");
 
-    auto now = UnixTimeHiRes.now!(ClockType.MONOTONIC_PRECISE)();
+    auto now = UnixTimeHiRes.now!(ClockType.MONOTONIC)();
     auto timer1 = Timer("test1", now);
     auto timer2 = Timer("test2", now);
 
