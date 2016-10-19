@@ -57,12 +57,6 @@ struct Duration(TimeUnit timeUnit)
         }
 
         @nogc
-        nothrow double as(ToDuration)() const
-        {
-
-        }
-
-        @nogc
         nothrow bool opEquals(OtherDuration)(const OtherDuration otherDuration)
         {
             return opEquals(otherDuration);
