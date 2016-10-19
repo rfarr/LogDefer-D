@@ -126,7 +126,7 @@ struct Logger(
         auto timer(string timerName)
         {
             eventContext_.timers.put(Timer(timerName, eventContext_.monotonicStartTime));
-            return eventContext_.timers.data[$-1].start_timer();
+            return eventContext_.timers.data[$-1].startTimer();
         }
 
         // Convenience wrappers...

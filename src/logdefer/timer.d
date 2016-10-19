@@ -1,93 +1,103 @@
 module logdefer.timer;
 
 
+import std.typecons : RefCounted;
+
 import logdefer.time.duration : Nanos;
 import logdefer.time.utils : toDuration;
 
 import unixtime : ClockType, UnixTimeHiRes;
+
 
 struct Timer
 {   
     public:
 
         // This is what triggers the timer to stop when it goes out of scope
-        struct Scoped
+        private struct Trigger
         {
             public:
-                @disable this();
-
-                this(Timer* parent)
+                this(Timer* timer)
                 {
-                    parent_ = parent;
+                    timer_ = timer;
                 }
 
                 ~this()
                 {
-                    // If parent freed don't do anything, else stop timer
-                    parent_ && parent_.stop();
+                    // If timer freed don't do anything, else stop timer
+                    timer_ && timer_.stopTimer();
                 }
 
             private:
-                Timer* parent_;
+                Timer* timer_;
 
-                // Parent freed
+                // Timer freed
                 void terminate()
                 {
-                    parent_ = null;
+                    timer_ = null;
                 }
         }
         
         @disable this();
         
-        this(string timerName, UnixTimeHiRes startTime)
+        this(string timerName, const UnixTimeHiRes startTime)
         {   
-            timerName_ = timerName;
             startTime_ = startTime;
+            timerName_ = timerName;
         }
 
         ~this()
         {
-            // If child freed don't do anything, else terminate
-            child_ && child_.terminate();
+            // If trigger freed don't do anything, else terminate
+            trigger_ && trigger_.terminate();
         }
 
         // Starts timer and returns struct which when destroyed will
         // stop timer
-        Scoped start_timer()
+        auto startTimer()
         {
+            trigger_ && trigger_.terminate();
+
             startOffset_ = toDuration!Nanos(startTime_, UnixTimeHiRes.now!(ClockType.MONOTONIC)());
-            auto child = Scoped(&this);
-            child_ = &child;
-            return child;
+
+            auto trigger = Trigger(&this);
+            trigger_ = &trigger;
+            return trigger;
         }
 
+        @property
         string name() const
         {
             return timerName_;
         }
 
-        // Get the start offset of the timer
+        @property
         Nanos start() const
         {
             return startOffset_;
         }
 
-        // Get the end offset of the timer
+        @property
         Nanos end() const
         {
-            return toDuration!Nanos(startTime_, UnixTimeHiRes.now!(ClockType.MONOTONIC)());
+            return endOffset_;
         }
 
     private:
-        string timerName_;
-        UnixTimeHiRes startTime_;
-        Nanos startOffset_;
-        Scoped* child_;
+        const UnixTimeHiRes startTime_;
 
-        // Called by child when it is freed
-        void stop()
+        Nanos startOffset_;
+        Nanos endOffset_;
+
+        Trigger* trigger_;
+
+        immutable string timerName_;
+
+        // Called by trigger when it is freed
+        void stopTimer()
         {
-            child_ = null;
+            endOffset_ = toDuration!Nanos(startTime_, UnixTimeHiRes.now!(ClockType.MONOTONIC)());
+            trigger_ = null;
         }
 }
 
@@ -108,9 +118,9 @@ unittest
     auto timer2 = Timer("test2", now);
 
     {
-        auto scope1 = timer1.start_timer();
+        auto scope1 = timer1.startTimer();
         {
-            auto scope2 = timer2.start_timer();
+            auto scope2 = timer2.startTimer();
             Thread.sleep(dur!"msecs"(250));
         }
         Thread.sleep(dur!"msecs"(250));
@@ -118,11 +128,11 @@ unittest
 
     assert(timer1.name == "test1");
     assert(timer1.start > 0);
-    assert(timer1.end > Millis(400));
+    assert(timer1.end > Millis(450));
     assert(timer1.end < Millis(600));
 
     assert(timer2.name == "test2");
     assert(timer2.start > 0);
-    assert(timer2.end > Millis(400));
-    assert(timer2.end < Millis(600));
+    assert(timer2.end > Millis(200));
+    assert(timer2.end < Millis(400));
 }

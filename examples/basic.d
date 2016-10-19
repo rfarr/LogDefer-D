@@ -18,6 +18,8 @@ void main()
 
     try
     {
+        auto timer = logger.timer("The try block");
+
         logger["RequestID"] = 123;
         auto product = multiply(7, 5, logger);
         logger.info("Product is ", product);
