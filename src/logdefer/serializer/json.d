@@ -68,14 +68,13 @@ struct JSONSerializer(Writer = DelegateWriter)
             if (eventContext.metadata)
             {
                 write(`,"data":{`);
-                //FIXME use byKeyValue when supported by ldc
-                foreach(const ref key; eventContext.metadata.byKey())
+                foreach(const ref entry; eventContext.metadata.byKeyValue())
                 {
                     writeAll([
                         `"`,
-                        encode(key),
+                        encode(entry.key),
                         `":"`,
-                        encode(eventContext.metadata[key]),
+                        encode(entry.value),
                         `",`
                     ]);
                 }
@@ -145,7 +144,7 @@ struct JSONSerializer(Writer = DelegateWriter)
 
 
         // Fast lookup for escapes
-        static immutable string[255] mapping;
+        static immutable string[256] mapping;
         shared static this()
         {
             foreach (i; 0..32)
