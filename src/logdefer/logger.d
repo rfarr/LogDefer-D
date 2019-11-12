@@ -61,7 +61,10 @@ struct Logger(
            Convenience constructor.  Uses default serializer and time provider
            with provided delegate to write log
         */
-        this()(void delegate(string msg) callback)
+        @safe
+        alias Callback = void delegate(string msg);
+
+        this()(Callback callback)
         {
             serializer_ = Serializer(callback);
             eventContext_.realStartTime = DefaultTimeProvider();
