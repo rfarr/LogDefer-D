@@ -8,8 +8,8 @@ import logdefer.time.utils : toDuration;
 
 import unixtime : ClockType, UnixTimeHiRes;
 
-
-struct Timer
+@safe
+class Timer
 {   
     public:
 
@@ -17,28 +17,21 @@ struct Timer
         private struct Trigger
         {
             public:
-                this(Timer* timer)
+                @disable this();
+
+                this(Timer timer)
                 {
                     timer_ = timer;
                 }
 
                 ~this()
                 {
-                    // If timer freed don't do anything, else stop timer
-                    timer_ && timer_.stopTimer();
+                  timer_.stop();
                 }
 
             private:
-                Timer* timer_;
-
-                // Timer freed
-                void terminate()
-                {
-                    timer_ = null;
-                }
+              Timer timer_;
         }
-        
-        @disable this();
         
         this(string timerName, const UnixTimeHiRes startTime)
         {   
@@ -46,23 +39,12 @@ struct Timer
             timerName_ = timerName;
         }
 
-        ~this()
-        {
-            // If trigger freed don't do anything, else terminate
-            trigger_ && trigger_.terminate();
-        }
-
         // Starts timer and returns struct which when destroyed will
         // stop timer
         auto startTimer()
         {
-            trigger_ && trigger_.terminate();
-
             startOffset_ = toDuration!Nanos(startTime_, UnixTimeHiRes.now!(ClockType.MONOTONIC)());
-
-            auto trigger = Trigger(&this);
-            trigger_ = &trigger;
-            return trigger;
+            return Trigger(this);
         }
 
         @property
@@ -93,11 +75,9 @@ struct Timer
 
         immutable string timerName_;
 
-        // Called by trigger when it is freed
-        void stopTimer()
+        void stop()
         {
             endOffset_ = toDuration!Nanos(startTime_, UnixTimeHiRes.now!(ClockType.MONOTONIC)());
-            trigger_ = null;
         }
 }
 
@@ -114,8 +94,8 @@ unittest
     writeln("[UnitTest Timer] - aprox duration");
 
     auto now = UnixTimeHiRes.now!(ClockType.MONOTONIC)();
-    auto timer1 = Timer("test1", now);
-    auto timer2 = Timer("test2", now);
+    auto timer1 = new Timer("test1", now);
+    auto timer2 = new Timer("test2", now);
 
     {
         auto scope1 = timer1.startTimer();

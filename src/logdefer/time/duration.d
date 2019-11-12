@@ -101,7 +101,8 @@ struct Duration(TimeUnit timeUnit)
             }
         }
 
-        Duration!timeUnit opMul(long operand) const
+        Duration!timeUnit opBinary(string op)(long operand) const
+        if (op == "*")
         {
             bool overflow;
             auto value = muls(this.value, operand, overflow);
@@ -114,7 +115,8 @@ struct Duration(TimeUnit timeUnit)
             return Duration!timeUnit(value);
         }
 
-        Duration!timeUnit opDiv(long operand) const
+        Duration!timeUnit opBinary(string op)(long operand) const
+        if (op == "/")
         {
             if (operand == 0)
             {

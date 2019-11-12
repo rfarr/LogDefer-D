@@ -5,6 +5,7 @@ import logdefer.common : DelegateWriter, EventContext, LogEntry;
 
 import std.array : Appender;
 import std.string : format;
+import std.traits : isSafe;
 import std.utf : stride, UTFException;
 
 import logdefer.time.duration : Seconds;
@@ -16,7 +17,8 @@ import logdefer.time.duration : Seconds;
   Since output format is fixed this uses an optimized algorithm.
   This is about 2x faster than using std.json
   */
-struct JSONSerializer(Writer = DelegateWriter)
+@safe
+struct JSONSerializer(Writer = DelegateWriter) if (isSafe!Writer)
 {
     public:
 
@@ -212,6 +214,7 @@ struct JSONSerializer(Writer = DelegateWriter)
 version (unittest)
 {
     import core.exception : RangeError;
+    import std.conv : hexString;
     import std.exception : assertThrown;
     import std.json : JSONValue, parseJSON;
     import std.stdio : writeln;
@@ -306,8 +309,8 @@ unittest
     auto ec = EventContext();
     ec.realStartTime = now;
     ec.endOffset = duration;
-    ec.metadata[x"e8af b7e6 b182 4944 0a00"] = x"3731 202d 20e9 98bf e5b0 94e6 b395 0a00";
-    ec.logs.put(LogEntry(duration, 1, x"e994 99e8 afaf 0a00"));
+    ec.metadata[hexString!("e8af b7e6 b182 4944 0a00")] = hexString!("3731 202d 20e9 98bf e5b0 94e6 b395 0a00");
+    ec.logs.put(LogEntry(duration, 1, hexString!("e994 99e8 afaf 0a00")));
 
     JSONValue json;
     auto serializer = JSONSerializer!(DelegateWriter)((string msg) { json = parseJSON(msg); });
@@ -319,9 +322,9 @@ unittest
     assert("data" in json);
 
     assert(json["logs"].array.length == 1);
-    assert(json["logs"][0][2].str == x"e994 99e8 afaf 0a00");
+    assert(json["logs"][0][2].str == hexString!("e994 99e8 afaf 0a00"));
 
-    assert(json["data"][x"e8af b7e6 b182 4944 0a00"].str == x"3731 202d 20e9 98bf e5b0 94e6 b395 0a00");
+    assert(json["data"][hexString!("e8af b7e6 b182 4944 0a00")].str == hexString!("3731 202d 20e9 98bf e5b0 94e6 b395 0a00"));
 }
 
 unittest
@@ -332,7 +335,7 @@ unittest
     ec.realStartTime = now;
     ec.endOffset = duration;
     // Invalid sequence
-    ec.logs.put(LogEntry(duration, 1, x"ff01"));
+    ec.logs.put(LogEntry(duration, 1, hexString!("ff01")));
 
     JSONValue json;
     auto serializer = JSONSerializer!(DelegateWriter)((string msg) { json = parseJSON(msg); });

@@ -47,6 +47,7 @@ alias DefaultLogger = Logger!();
   internal buffer.  Once the object goes out of scope the logs are passed to the
   serializer which handles formatting and writing out the logs.
   */
+@safe
 struct Logger(
     Serializer = JSONSerializer!(DelegateWriter),
     TimeProvider = typeof(DefaultTimeProvider)
@@ -125,7 +126,7 @@ struct Logger(
 
         auto timer(string timerName)
         {
-            eventContext_.timers.put(Timer(timerName, eventContext_.monotonicStartTime));
+            eventContext_.timers.put(new Timer(timerName, eventContext_.monotonicStartTime));
             return eventContext_.timers.data[$-1].startTimer();
         }
 

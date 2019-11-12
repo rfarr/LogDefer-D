@@ -7,7 +7,7 @@
         "Richard Farr"
     ],
     "dependencies": {
-        "unixtime": "0.2.0"
+        "unixtime": "0.2.2"
     },
 
     "targetName": "logdeferd",

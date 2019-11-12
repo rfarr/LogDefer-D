@@ -17,6 +17,7 @@ alias Metadata = string[string];
 enum LogLevel { Error = 10, Warn = 20, Info = 30, Trace = 40 };
 
 // Represents a log entry
+@safe
 struct LogEntry
 {
     immutable Nanos endOffset; // duration from start
@@ -30,6 +31,7 @@ struct LogEntry
 }
 
 // Represents the event that the logs entries pertain to
+@safe
 struct EventContext
 {
     UnixTimeHiRes realStartTime; // Time when event first started
@@ -67,9 +69,11 @@ struct EventContext
     }
 }
 
+@safe
 alias DelegateWriter = void delegate(string msg);
 
 // By default use system clock
+@safe
 static const DefaultTimeProvider = () {
     return UnixTimeHiRes.now();
 };
